@@ -137,18 +137,6 @@ void RGL_FinishUnits(void)
 	RGL_DrawUnits();
 }
 
-static inline void myActiveTexture(GLuint id)
-{
-#ifndef EDGE_GL_ES2	
-	if (GLAD_GL_VERSION_1_3)
-		glActiveTexture(id);
-	else /* GLEW_ARB_multitexture */
-		glActiveTextureARB(id);
-#else
-	glActiveTexture(id);
-#endif
-}
-
 //
 // RGL_BeginUnit
 //
@@ -485,6 +473,9 @@ void RGL_DrawUnits(void)
 		if (active_blending & BL_Invert)
 			glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
 
+		if ((active_blending & BL_SmoothLines) && unit->shape == GL_LINES)
+			glEnable(GL_LINE_SMOOTH);
+
 		if (r_fogofwar.d || r_culling.d)
 		{
 			if ((unit->blending & BL_NoFog) == BL_NoFog)
@@ -495,7 +486,7 @@ void RGL_DrawUnits(void)
 		{
 			if (active_tex[t] != unit->tex[t] || active_env[t] != unit->env[t])
 			{
-				myActiveTexture(GL_TEXTURE0 + t);
+				glActiveTexture(GL_TEXTURE0 + t);
 			}
 
 			if (unit->pass > 0)
@@ -543,6 +534,9 @@ void RGL_DrawUnits(void)
 		GLint old_xclamp = DUMMY_CLAMP;
 		GLint old_yclamp = DUMMY_CLAMP;
 
+		if (unit->line_thickness != 1.0f && unit->shape == GL_LINES)
+			glLineWidth(unit->line_thickness);
+
 		if ((active_blending & BL_ClampY) && active_tex[0] != 0)
 		{
 			glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &old_yclamp);
@@ -572,6 +566,10 @@ void RGL_DrawUnits(void)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, old_yclamp);
 		if (old_yclamp != DUMMY_CLAMP)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, old_yclamp);
+
+		// restore line thickness
+		if (unit->line_thickness != 1.0f)
+			glLineWidth(1.0f);			
 	}
 
 	// all done
@@ -581,7 +579,7 @@ void RGL_DrawUnits(void)
 
 	for (int t=1; t >=0; t--)
 	{
-		myActiveTexture(GL_TEXTURE0 + t);
+		glActiveTexture(GL_TEXTURE0 + t);
 
 		if (active_env[t] >= CUSTOM_ENV_BEGIN &&
 			active_env[t] <= CUSTOM_ENV_END)
@@ -601,6 +599,7 @@ void RGL_DrawUnits(void)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glAlphaFunc(GL_GREATER, 0);
 
+	glDisable(GL_LINE_SMOOTH);
 	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 	glDisable(GL_CULL_FACE);

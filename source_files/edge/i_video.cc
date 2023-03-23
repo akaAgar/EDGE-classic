@@ -146,26 +146,13 @@ void I_DeterminePixelAspect()
 
 void I_StartupGraphics(void)
 {
-	if (argv::Find("directx") > 0)
-		force_directx = true;
-
-	if (argv::Find("gdi") > 0 || argv::Find("nodirectx") > 0)
-		force_directx = false;
-
 	std::string driver = epi::to_u8string(argv::Value("videodriver"));
 
 	if (driver.empty())
 		driver = SDL_getenv("SDL_VIDEODRIVER") ? SDL_getenv("SDL_VIDEODRIVER") : "";
 
 	if (driver.empty())
-	{
 		driver = "default";
-
-#ifdef WIN32
-		if (force_directx)
-			driver = "directx";
-#endif
-	}
 
 	if (epi::case_cmp(driver, "default") != 0)
 	{
@@ -173,7 +160,6 @@ void I_StartupGraphics(void)
 	}
 
 	I_Printf("SDL_Video_Driver: %s\n", driver.c_str());
-
 
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0)
 		I_Error("Couldn't init SDL VIDEO!\n%s\n", SDL_GetError());
@@ -240,8 +226,7 @@ void I_StartupGraphics(void)
     borderless_mode.height = info.h;
     borderless_mode.depth = SDL_BITSPERPIXEL(info.format);
 
-	// -ACB- 2000/03/16 Test for possible windowed resolutions
-	// -AJA- TODO see if SDL2 can give us a definitive list, rather than this silliness
+	// Add all items from windowed resolution list that are less than native resolution
 	for (int i = 0; possible_modes[i].w != -1; i++)
 	{
 		scrmode_c mode;

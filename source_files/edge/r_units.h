@@ -83,25 +83,23 @@ void RGL_DrawUnits(void);
 
 typedef enum
 {
-	BL_NONE = 0,
-
-	BL_Masked   = (1<<0),  // drop fragments when alpha == 0
-	BL_Less     = (1<<1),  // drop fragments when alpha < color.a
-	BL_Greater  = (1<<2),  // drop fragments when alpha > color.a
-	BL_GEqual   = (1<<3),  // drop fragments when alpha >= color.a
-	BL_Alpha    = (1<<4),  // alpha-blend with the framebuffer
-	BL_Add      = (1<<5),  // additive-blend with the framebuffer
-	BL_Invert = (1<<6),   // invert color-blend
-	BL_SmoothLines = (1<<7), // Smooth GL_LINES
-
-	BL_CullBack = (1<<8),  // enable back-face culling
-	BL_CullFront= (1<<9),  // enable front-face culling
-	BL_NoZBuf   = (1<<10),  // don't update the Z buffer
-	BL_ClampY   = (1<<11),  // force texture to be Y clamped
-	BL_RepeatX   = (1<<12), // force texture to repeat on X axis
-	BL_RepeatY   = (1<<13), // force texture to repeat on Y axis
-	BL_Foggable   = (1<<14),  // allow fog to affect texture in multipass renders
-	BL_NoFog = (1<<15) // force disable fog for this unit regardless 
+	BL_NONE        = 0,
+	BL_Masked      = (1<<0),  // drop fragments when alpha == 0
+	BL_Less        = (1<<1),  // drop fragments when alpha < color.a
+	BL_Greater     = (1<<2),  // drop fragments when alpha > color.a
+	BL_GEqual      = (1<<3),  // drop fragments when alpha >= color.a
+	BL_Alpha       = (1<<4),  // alpha-blend with the framebuffer
+	BL_Add         = (1<<5),  // additive-blend with the framebuffer
+	BL_Invert      = (1<<6),  // invert color-blend
+	BL_SmoothLines = (1<<7),  // Smooth GL_LINES
+	BL_CullBack    = (1<<8),  // enable back-face culling
+	BL_CullFront   = (1<<9),  // enable front-face culling
+	BL_NoZBuf      = (1<<10), // don't update the Z buffer
+	BL_ClampY      = (1<<11), // force texture to be Y clamped
+	BL_RepeatX     = (1<<12), // force texture to repeat on X axis
+	BL_RepeatY     = (1<<13), // force texture to repeat on Y axis
+	BL_Foggable    = (1<<14), // allow fog to affect texture in multipass renders
+	BL_NoFog       = (1<<15)  // force disable fog for this unit regardless 
 }
 blending_mode_e;
 
