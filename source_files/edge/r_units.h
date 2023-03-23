@@ -27,6 +27,7 @@
 #define __R_UNITS_H__
 
 #define MAX_PLVERT  64
+#define MAX_L_VERT  65535
 
 // a single vertex to pass to the GL 
 typedef struct local_gl_vert_s
@@ -35,9 +36,38 @@ typedef struct local_gl_vert_s
 	vec3_t pos;
 	vec2_t texc[2];
 	vec3_t normal;
-	GLboolean edge;
 }
 local_gl_vert_t;
+
+// a single unit (polygon, quad, etc) to pass to the GL
+typedef struct local_gl_unit_s
+{
+	// unit mode (e.g. GL_TRIANGLE_FAN)
+	GLuint shape;
+
+	// environment modes (GL_REPLACE, GL_MODULATE, GL_DECAL, GL_ADD)
+	GLuint env[2];
+
+	// texture(s) used
+	GLuint tex[2];
+
+	// pass number (multiple pass rendering)
+	int pass;
+
+	// blending flags
+	int blending;
+
+	// Used as alpha target
+	float alpha_test_value = 0.0f;
+
+	// vertex information
+	int v_count;
+	int i_count;
+	std::vector<GLushort> indices;
+}
+local_gl_unit_t;
+
+extern local_gl_vert_t local_verts[MAX_L_VERT];
 
 extern GLfloat cull_fog_color[4];
 
@@ -54,14 +84,20 @@ typedef enum
 
 	BL_Masked   = (1<<0),  // drop fragments when alpha == 0
 	BL_Less     = (1<<1),  // drop fragments when alpha < color.a
-	BL_Alpha    = (1<<2),  // alpha-blend with the framebuffer
-	BL_Add      = (1<<3),  // additive-blend with the framebuffer
+	BL_Greater  = (1<<2),  // drop fragments when alpha > color.a
+	BL_GEqual   = (1<<3),  // drop fragments when alpha >= color.a
+	BL_Alpha    = (1<<4),  // alpha-blend with the framebuffer
+	BL_Add      = (1<<5),  // additive-blend with the framebuffer
+	BL_Invert = (1<<6),   // invert color-blend
 
-	BL_CullBack = (1<<4),  // enable back-face culling
-	BL_CullFront= (1<<5),  // enable front-face culling
-	BL_NoZBuf   = (1<<6),  // don't update the Z buffer
-	BL_ClampY   = (1<<7),  // force texture to be Y clamped
-	BL_Foggable   = (1<<8),  // force texture to be Y clamped
+	BL_CullBack = (1<<7),  // enable back-face culling
+	BL_CullFront= (1<<8),  // enable front-face culling
+	BL_NoZBuf   = (1<<9),  // don't update the Z buffer
+	BL_ClampY   = (1<<10),  // force texture to be Y clamped
+	BL_RepeatX   = (1<<11), // force texture to repeat on X axis
+	BL_RepeatY   = (1<<12), // force texture to repeat on Y axis
+	BL_Foggable   = (1<<13),  // allow fog to affect texture in multipass renders
+	BL_NoFog = (1<<14) // force disable fog for this unit regardless 
 }
 blending_mode_e;
 
@@ -83,10 +119,10 @@ typedef enum
 }
 edge_environment_e;
 
-local_gl_vert_t *RGL_BeginUnit(GLuint shape, int max_vert, 
+local_gl_unit_t *RGL_BeginUnit(GLuint shape, int max_vert, int max_index,
 		                       GLuint env1, GLuint tex1,
 							   GLuint env2, GLuint tex2,
-							   int pass, int blending);
+							   int pass, int blending, int *first_vert_index);
 void RGL_EndUnit(int actual_vert);
 
 

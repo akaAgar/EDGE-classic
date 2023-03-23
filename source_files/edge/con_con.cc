@@ -44,6 +44,7 @@
 #include "r_draw.h"
 #include "r_image.h"
 #include "r_modes.h"
+#include "r_units.h"
 #include "r_wipe.h"
 #include "w_wad.h"
 
@@ -598,21 +599,39 @@ static void CalcSizes()
 
 static void SolidBox(int x, int y, int w, int h, rgbcol_t col, float alpha)
 {
-	if (alpha < 0.99f)
-		glEnable(GL_BLEND);
 
-	glColor4f(RGB_RED(col)/255.0, RGB_GRN(col)/255.0, RGB_BLU(col)/255.0, alpha);
+	float r = RGB_RED(col)/255.0;
+	float g = RGB_GRN(col)/255.0;
+	float b = RGB_BLU(col)/255.0;
 
-	glBegin(GL_QUADS);
+	RGL_StartUnits(false);
 
-	glVertex2i(x,   y);
-	glVertex2i(x,   y+h);
-	glVertex2i(x+w, y+h);
-	glVertex2i(x+w, y);
+	int first_vert_index = 0;
 
-	glEnd();
+	local_gl_unit_t *glunit = RGL_BeginUnit(
+			GL_TRIANGLES, 4, 6,
+			GL_MODULATE, 0,
+			ENV_NONE, 0, 0, (alpha < 0.99f ? BL_Alpha : BL_NONE) | BL_NoZBuf, &first_vert_index);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+	local_verts[first_vert_index].pos = {(float)x, (float)y, 0.0f};
+	local_verts[first_vert_index+1].pos = {(float)x, (float)y+h, 0.0f};
+	local_verts[first_vert_index+2].pos = {(float)x+w, (float)y+h, 0.0f};
+	local_verts[first_vert_index+3].pos = {(float)x+w, (float)y, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = alpha;
+	}
+	RGL_EndUnit(4);
 
-	glDisable(GL_BLEND);
+	RGL_FinishUnits();
 }
 
 static void HorizontalLine(int y, rgbcol_t col)
@@ -629,9 +648,9 @@ static void DrawChar(int x, int y, char ch, rgbcol_t col)
 		return;
 
 	float alpha = 1.0f;
-
-	glColor4f(RGB_RED(col)/255.0f, RGB_GRN(col)/255.0f, 
-				RGB_BLU(col)/255.0f, alpha);
+	float r = RGB_RED(col)/255.0f;
+	float g =  RGB_GRN(col)/255.0f;
+	float b = RGB_BLU(col)/255.0f;
 
 	if (con_font->def->type == FNTYP_TrueType)
 	{
@@ -640,22 +659,45 @@ static void DrawChar(int x, int y, char ch, rgbcol_t col)
 		float y_adjust = con_font->ttf_glyph_map.at(cp437_unicode_values[static_cast<u8_t>(ch)]).y_shift * FNSZ_ratio;
 		float height = con_font->ttf_glyph_map.at(cp437_unicode_values[static_cast<u8_t>(ch)]).height * FNSZ_ratio;
 		stbtt_aligned_quad *q = con_font->ttf_glyph_map.at(cp437_unicode_values[static_cast<u8_t>(ch)]).char_quad;
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_TEXTURE_2D);
+		GLuint tex_id = 0;
 		if ((var_smoothing && con_font->def->ttf_smoothing == con_font->def->TTF_SMOOTH_ON_DEMAND) ||
 			con_font->def->ttf_smoothing == con_font->def->TTF_SMOOTH_ALWAYS)
-			glBindTexture(GL_TEXTURE_2D, con_font->ttf_glyph_map.at(cp437_unicode_values[static_cast<u8_t>(ch)]).smoothed_tex_id);
+			tex_id = con_font->ttf_glyph_map.at(cp437_unicode_values[static_cast<u8_t>(ch)]).smoothed_tex_id;
 		else
-			glBindTexture(GL_TEXTURE_2D, con_font->ttf_glyph_map.at(cp437_unicode_values[static_cast<u8_t>(ch)]).tex_id);
-		glBegin(GL_POLYGON);
-		glTexCoord2f(q->s0,q->t0); glVertex2f(x + x_adjust,y - y_adjust);
-        glTexCoord2f(q->s1,q->t0); glVertex2f(x + x_adjust + width,y - y_adjust);
-        glTexCoord2f(q->s1,q->t1); glVertex2f(x + x_adjust + width,y - y_adjust - height);
-        glTexCoord2f(q->s0,q->t1); glVertex2f(x + x_adjust,y - y_adjust - height);
-		glEnd();
-		glDisable(GL_TEXTURE_2D);
-		glDisable(GL_BLEND);
+			tex_id = con_font->ttf_glyph_map.at(cp437_unicode_values[static_cast<u8_t>(ch)]).tex_id;
+
+		RGL_StartUnits(false);
+
+		int first_vert_index = 0;
+
+		local_gl_unit_t *glunit = RGL_BeginUnit(
+				GL_TRIANGLES, 4, 6,
+				GL_MODULATE, tex_id,
+				ENV_NONE, 0, 0, BL_Alpha | BL_NoZBuf, &first_vert_index);
+		glunit->indices[0] = first_vert_index;
+		glunit->indices[1] = first_vert_index + 1;
+		glunit->indices[2] = first_vert_index + 2;
+		glunit->indices[3] = first_vert_index;
+		glunit->indices[4] = first_vert_index + 2;
+		glunit->indices[5] = first_vert_index + 3;
+		local_verts[first_vert_index].texc->Set(q->s0,q->t0);
+		local_verts[first_vert_index].pos = {x + x_adjust,y - y_adjust, 0.0f};
+		local_verts[first_vert_index+1].texc->Set(q->s1,q->t0);
+		local_verts[first_vert_index+1].pos = {x + x_adjust + width,y - y_adjust, 0.0f};
+		local_verts[first_vert_index+2].texc->Set(q->s1,q->t1);
+		local_verts[first_vert_index+2].pos = {x + x_adjust + width,y - y_adjust - height, 0.0f};
+		local_verts[first_vert_index+3].texc->Set(q->s0,q->t1);
+		local_verts[first_vert_index+3].pos = {x + x_adjust,y - y_adjust - height, 0.0f};
+		for (int i=0; i < 4; i++)
+		{
+			local_verts[first_vert_index+i].rgba[0] = r;
+			local_verts[first_vert_index+i].rgba[1] = g;
+			local_verts[first_vert_index+i].rgba[2] = b;
+			local_verts[first_vert_index+i].rgba[3] = alpha;
+		}
+		RGL_EndUnit(4);
+
+		RGL_FinishUnits();
 		return;
 	}
 
@@ -667,22 +709,41 @@ static void DrawChar(int x, int y, char ch, rgbcol_t col)
 	float ty1 = (py  ) * con_font->font_image->ratio_h;
 	float ty2 = (py+1) * con_font->font_image->ratio_h;
 
-	glBegin(GL_POLYGON);
+	RGL_StartUnits(false);
 
-	glTexCoord2f(tx1, ty1);
-	glVertex2i(x, y);
+	int first_vert_index = 0;
 
-	glTexCoord2f(tx1, ty2); 
-	glVertex2i(x, y + FNSZ);
+	// Always whiten the font when used with console output
+	GLuint tex_id = W_ImageCache(con_font->font_image, true, (const colourmap_c *)0, true);
 
-	glTexCoord2f(tx2, ty2);
-	glVertex2i(x + FNSZ, y + FNSZ);
+	local_gl_unit_t *glunit = RGL_BeginUnit(
+			GL_TRIANGLES, 4, 6,
+			GL_MODULATE, tex_id,
+			ENV_NONE, 0, 0, BL_Alpha | BL_NoZBuf, &first_vert_index);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+	local_verts[first_vert_index].texc->Set(tx1, ty1);
+	local_verts[first_vert_index].pos = {(float)x, (float)y, 0.0f};
+	local_verts[first_vert_index+1].texc->Set(tx1, ty2);
+	local_verts[first_vert_index+1].pos = {(float)x, (float)y+FNSZ, 0.0f};
+	local_verts[first_vert_index+2].texc->Set(tx2, ty2);
+	local_verts[first_vert_index+2].pos = {(float)x+FNSZ, (float)y+FNSZ, 0.0f};
+	local_verts[first_vert_index+3].texc->Set(tx2, ty1);
+	local_verts[first_vert_index+3].pos = {(float)x+FNSZ, (float)y, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = alpha;
+	}
+	RGL_EndUnit(4);
 
-	glTexCoord2f(tx2, ty1);
-	glVertex2i(x + FNSZ, y);
-
-	glEnd();
-
+	RGL_FinishUnits();
 }
 
 static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, bool blink, GLuint tex_id)
@@ -691,29 +752,40 @@ static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, b
 		return;
 
 	float alpha = 1.0f;
+	float r = RGB_RED(col2)/255.0f;
+	float g = RGB_GRN(col2)/255.0f;
+	float b = RGB_BLU(col2)/255.0f;
 
-	glDisable(GL_TEXTURE_2D);
+	int first_vert_index = 0;
 
-	glColor4f(RGB_RED(col2)/255.0f, RGB_GRN(col2)/255.0f, 
-						RGB_BLU(col2)/255.0f, alpha);
+	RGL_StartUnits(false);
 
-	glBegin(GL_QUADS);
+	local_gl_unit_t *glunit = RGL_BeginUnit(
+			GL_TRIANGLES, 4, 6,
+			GL_MODULATE, 0,
+			ENV_NONE, 0, 0, BL_NoZBuf, &first_vert_index);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+	local_verts[first_vert_index].pos = {(float)x+4, (float)y, 0.0f};
+	local_verts[first_vert_index+1].pos = {(float)x+4, (float)y+FNSZ, 0.0f};
+	local_verts[first_vert_index+2].pos = {(float)x+FNSZ-3, (float)y+FNSZ, 0.0f};
+	local_verts[first_vert_index+3].pos = {(float)x+FNSZ-3, (float)y, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = alpha;
+	}
+	RGL_EndUnit(4);
 
-	// Tweak x to prevent overlap of subsequent letters; may need to make this a bit more smart down the line
-	glVertex2i(x + 4, y);
-
-	glVertex2i(x + 4, y + FNSZ);
-
-	glVertex2i(x + FNSZ - 3, y + FNSZ);
-
-	glVertex2i(x + FNSZ - 3, y);
-
-	glEnd();
-
-	glEnable(GL_TEXTURE_2D);
-
-	glColor4f(RGB_RED(col)/255.0f, RGB_GRN(col)/255.0f, 
-				RGB_BLU(col)/255.0f, alpha);
+	r = RGB_RED(col)/255.0f;
+	g = RGB_GRN(col)/255.0f;
+	b =	RGB_BLU(col)/255.0f;
 
 	if (blink && con_cursor >= 16)
 		ch = 0x20;
@@ -727,40 +799,39 @@ static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, b
 	float ty1 = (py  ) * endoom_font->font_image->ratio_h;
 	float ty2 = (py+1) * endoom_font->font_image->ratio_h;
 
-	glBegin(GL_POLYGON);
+	glunit = RGL_BeginUnit(
+			GL_TRIANGLES, 4, 6,
+			GL_MODULATE, tex_id,
+			ENV_NONE, 0, 0, BL_Alpha | BL_NoZBuf, &first_vert_index);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+	local_verts[first_vert_index].texc->Set(tx1, ty1);
+	local_verts[first_vert_index].pos = {(float)x, (float)y, 0.0f};
+	local_verts[first_vert_index+1].texc->Set(tx1, ty2);
+	local_verts[first_vert_index+1].pos = {(float)x, (float)y+FNSZ, 0.0f};
+	local_verts[first_vert_index+2].texc->Set(tx2, ty2);
+	local_verts[first_vert_index+2].pos = {(float)x+FNSZ, (float)y+FNSZ, 0.0f};
+	local_verts[first_vert_index+3].texc->Set(tx2, ty1);
+	local_verts[first_vert_index+3].pos = {(float)x+FNSZ, (float)y, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = alpha;
+	}
+	RGL_EndUnit(4);
 
-	glTexCoord2f(tx1, ty1);
-	glVertex2i(x, y);
-
-	glTexCoord2f(tx1, ty2); 
-	glVertex2i(x, y + FNSZ);
-
-	glTexCoord2f(tx2, ty2);
-	glVertex2i(x + FNSZ, y + FNSZ);
-
-	glTexCoord2f(tx2, ty1);
-	glVertex2i(x + FNSZ, y);
-
-	glEnd();
-
+	RGL_FinishUnits();
 }
 
 // writes the text on coords (x,y) of the console
 static void DrawText(int x, int y, const char *s, rgbcol_t col)
 {
-	if (con_font->def->type == FNTYP_Image)
-	{
-		// Always whiten the font when used with console output
-		GLuint tex_id = W_ImageCache(con_font->font_image, true, (const colourmap_c *)0, true);
-
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, tex_id);
-	
-		glEnable(GL_BLEND);
-		glEnable(GL_ALPHA_TEST);
-		glAlphaFunc(GL_GREATER, 0);
-	}
-
 	bool draw_cursor = false;
 
 	if (s == input_line)
@@ -788,10 +859,6 @@ static void DrawText(int x, int y, const char *s, rgbcol_t col)
 
 	if (draw_cursor)
 		DrawChar(x, y, 95, col);
-
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_BLEND);
 }
 
 

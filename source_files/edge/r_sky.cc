@@ -292,23 +292,14 @@ void RGL_BeginSky(void)
 	need_to_draw_sky = false;
 
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	glDisable(GL_TEXTURE_2D);
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	// I don't think we need glEdgeFlag anymore; from what I've read this only
-	// matters if we switch glPolygonMode away from GL_FILL - Dasho
-	//glEdgeFlag(GL_TRUE);
-
-	// Draw the entire sky using only one glBegin/glEnd clause.
-	// glEnd is called in RGL_FinishSky and this code assumes that only
-	// RGL_DrawSkyWall and RGL_DrawSkyPlane is doing OpenGL calls in between.
-	glBegin(GL_TRIANGLES);
+	RGL_StartUnits(true);
 }
 
 
 void RGL_FinishSky(void)
 {
-	glEnd(); // End glBegin(GL_TRIANGLES) from RGL_BeginSky
+	RGL_FinishUnits();
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
@@ -317,23 +308,25 @@ void RGL_FinishSky(void)
 
 	// draw sky picture, but DON'T affect the depth buffering
 
-	glEnable(GL_TEXTURE_2D);
-
-	glDepthMask(GL_FALSE);
+	if (! r_dumbsky.d)
+		glDepthFunc(GL_GREATER);
 
 	if (r_culling.d)
 		glDisable(GL_DEPTH_TEST);
 
 	if (level_flags.mlook || custom_sky_box)
 	{
-		if (! r_dumbsky.d)
-			glDepthFunc(GL_GREATER);
-
 		RGL_DrawSkyBox();
 	}
 	else
 	{
+		glEnable(GL_TEXTURE_2D);
+
+		glDepthMask(GL_FALSE);
+
 		RGL_DrawSkyOriginal();
+
+		glDisable(GL_TEXTURE_2D);
 	}
 
 	if (r_culling.d)
@@ -341,8 +334,6 @@ void RGL_FinishSky(void)
 
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
-
-	glDisable(GL_TEXTURE_2D);
 
 #if 0
 	// clear buffer (EXPERIMENTAL) -- causes render problems: ceilings
@@ -360,6 +351,8 @@ void RGL_DrawSkyBox(void)
 
 	RGL_SetupSkyMatrices(dist);
 
+	RGL_StartUnits(false);
+
 	float v0 = 0.0f;
 	float v1 = 1.0f;
 
@@ -371,8 +364,6 @@ void RGL_DrawSkyBox(void)
 		v1 = 1.0f - v0;
 	}
 
-	glEnable(GL_TEXTURE_2D);
-
 	float col[4];
 
 	col[0] = LT_RED(255);
@@ -380,99 +371,195 @@ void RGL_DrawSkyBox(void)
 	col[2] = LT_BLU(255);
 	col[3] = 1.0f;
 
-	if (r_colormaterial.d || ! r_colorlighting.d)
-		glColor4fv(col);
-	else
-	{
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, col);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, col);
-	}
+	int first_vert_index;
 
 	// top
-	glBindTexture(GL_TEXTURE_2D, fake_box[SK].tex[WSKY_Top]);
-        glNormal3i(0, 0, -1);
-	#ifdef APPLE_SILICON
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	#endif
-	glBegin(GL_QUADS);
-	glTexCoord2f(v0, v0); glVertex3f(-dist,  dist, +dist);
-	glTexCoord2f(v0, v1); glVertex3f(-dist, -dist, +dist);
-	glTexCoord2f(v1, v1); glVertex3f( dist, -dist, +dist);
-	glTexCoord2f(v1, v0); glVertex3f( dist,  dist, +dist);
-	glEnd();
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, fake_box[SK].tex[WSKY_Top],
+			 ENV_NONE, 0, 0, BL_NoZBuf | BL_NoFog, &first_vert_index);
+
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+
+	local_verts[first_vert_index].texc->Set(v0, v0);
+	local_verts[first_vert_index].pos = {-dist, dist, +dist};
+	local_verts[first_vert_index+1].texc->Set(v0, v1);
+	local_verts[first_vert_index+1].pos = {-dist, -dist, +dist};
+	local_verts[first_vert_index+2].texc->Set(v1, v1);
+	local_verts[first_vert_index+2].pos = {dist, -dist, +dist};
+	local_verts[first_vert_index+3].texc->Set(v1, v0);
+	local_verts[first_vert_index+3].pos = {dist, dist, +dist};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = col[0];
+		local_verts[first_vert_index+i].rgba[1] = col[1];
+		local_verts[first_vert_index+i].rgba[2] = col[2];
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].normal.Set(0, 0, -1);
+	}
+	RGL_EndUnit(4);
 
 	// bottom
-	glBindTexture(GL_TEXTURE_2D, fake_box[SK].tex[WSKY_Bottom]);
-        glNormal3i(0, 0, +1);
-	#ifdef APPLE_SILICON
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	#endif
-	glBegin(GL_QUADS);
-	glTexCoord2f(v0, v0); glVertex3f(-dist, -dist, -dist);
-	glTexCoord2f(v0, v1); glVertex3f(-dist,  dist, -dist);
-	glTexCoord2f(v1, v1); glVertex3f( dist,  dist, -dist);
-	glTexCoord2f(v1, v0); glVertex3f( dist, -dist, -dist);
-	glEnd();
+	glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, fake_box[SK].tex[WSKY_Bottom],
+			 ENV_NONE, 0, 0, BL_NoZBuf | BL_NoFog, &first_vert_index);
+
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+
+	local_verts[first_vert_index].texc->Set(v0, v0);
+	local_verts[first_vert_index].pos = {-dist, -dist, -dist};
+	local_verts[first_vert_index+1].texc->Set(v0, v1);
+	local_verts[first_vert_index+1].pos = {-dist, dist, -dist};
+	local_verts[first_vert_index+2].texc->Set(v1, v1);
+	local_verts[first_vert_index+2].pos = {dist, dist, -dist};
+	local_verts[first_vert_index+3].texc->Set(v1, v0);
+	local_verts[first_vert_index+3].pos = {dist, -dist, -dist};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = col[0];
+		local_verts[first_vert_index+i].rgba[1] = col[1];
+		local_verts[first_vert_index+i].rgba[2] = col[2];
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].normal.Set(0, 0, +1);
+	}
+	RGL_EndUnit(4);
 
 	// north
-	glBindTexture(GL_TEXTURE_2D, fake_box[SK].tex[WSKY_North]);
-        glNormal3i(0, -1, 0);
-	#ifdef APPLE_SILICON
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	#endif
-	glBegin(GL_QUADS);
-	glTexCoord2f(v0, v0); glVertex3f(-dist,  dist, -dist);
-	glTexCoord2f(v0, v1); glVertex3f(-dist,  dist, +dist);
-	glTexCoord2f(v1, v1); glVertex3f( dist,  dist, +dist);
-	glTexCoord2f(v1, v0); glVertex3f( dist,  dist, -dist);
-	glEnd();
+	glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, fake_box[SK].tex[WSKY_North],
+			 ENV_NONE, 0, 0, BL_NoZBuf | BL_NoFog, &first_vert_index);
+
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+
+	local_verts[first_vert_index].texc->Set(v0, v0);
+	local_verts[first_vert_index].pos = {-dist, dist, -dist};
+	local_verts[first_vert_index+1].texc->Set(v0, v1);
+	local_verts[first_vert_index+1].pos = {-dist, dist, +dist};
+	local_verts[first_vert_index+2].texc->Set(v1, v1);
+	local_verts[first_vert_index+2].pos = {dist, dist, +dist};
+	local_verts[first_vert_index+3].texc->Set(v1, v0);
+	local_verts[first_vert_index+3].pos = {dist, dist, -dist};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = col[0];
+		local_verts[first_vert_index+i].rgba[1] = col[1];
+		local_verts[first_vert_index+i].rgba[2] = col[2];
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].normal.Set(0, -1, 0);
+	}
+	RGL_EndUnit(4);
 
 	// east
-	glBindTexture(GL_TEXTURE_2D, fake_box[SK].tex[WSKY_East]);
-        glNormal3i(-1, 0, 0);
-	#ifdef APPLE_SILICON
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	#endif
-	glBegin(GL_QUADS);
-	glTexCoord2f(v0, v0); glVertex3f( dist,  dist, -dist);
-	glTexCoord2f(v0, v1); glVertex3f( dist,  dist, +dist);
-	glTexCoord2f(v1, v1); glVertex3f( dist, -dist, +dist);
-	glTexCoord2f(v1, v0); glVertex3f( dist, -dist, -dist);
-	glEnd();
+	glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, fake_box[SK].tex[WSKY_East],
+			 ENV_NONE, 0, 0, BL_NoZBuf | BL_NoFog, &first_vert_index);
+
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+
+	local_verts[first_vert_index].texc->Set(v0, v0);
+	local_verts[first_vert_index].pos = {dist, dist, -dist};
+	local_verts[first_vert_index+1].texc->Set(v0, v1);
+	local_verts[first_vert_index+1].pos = {dist, dist, +dist};
+	local_verts[first_vert_index+2].texc->Set(v1, v1);
+	local_verts[first_vert_index+2].pos = {dist, -dist, +dist};
+	local_verts[first_vert_index+3].texc->Set(v1, v0);
+	local_verts[first_vert_index+3].pos = {dist, -dist, -dist};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = col[0];
+		local_verts[first_vert_index+i].rgba[1] = col[1];
+		local_verts[first_vert_index+i].rgba[2] = col[2];
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].normal.Set(-1, 0, 0);
+	}
+	RGL_EndUnit(4);
 
 	// south
-	glBindTexture(GL_TEXTURE_2D, fake_box[SK].tex[WSKY_South]);
-        glNormal3i(0, +1, 0);
-	#ifdef APPLE_SILICON
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	#endif
-	glBegin(GL_QUADS);
-	glTexCoord2f(v0, v0); glVertex3f( dist, -dist, -dist);
-	glTexCoord2f(v0, v1); glVertex3f( dist, -dist, +dist);
-	glTexCoord2f(v1, v1); glVertex3f(-dist, -dist, +dist);
-	glTexCoord2f(v1, v0); glVertex3f(-dist, -dist, -dist);
-	glEnd();
+	glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, fake_box[SK].tex[WSKY_South],
+			 ENV_NONE, 0, 0, BL_NoZBuf | BL_NoFog, &first_vert_index);
+
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+
+	local_verts[first_vert_index].texc->Set(v0, v0);
+	local_verts[first_vert_index].pos = {dist, -dist, -dist};
+	local_verts[first_vert_index+1].texc->Set(v0, v1);
+	local_verts[first_vert_index+1].pos = {dist, -dist, +dist};
+	local_verts[first_vert_index+2].texc->Set(v1, v1);
+	local_verts[first_vert_index+2].pos = {-dist, -dist, +dist};
+	local_verts[first_vert_index+3].texc->Set(v1, v0);
+	local_verts[first_vert_index+3].pos = {-dist, -dist, -dist};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = col[0];
+		local_verts[first_vert_index+i].rgba[1] = col[1];
+		local_verts[first_vert_index+i].rgba[2] = col[2];
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].normal.Set(0, +1, 0);
+	}
+	RGL_EndUnit(4);
 
 	// west
-	glBindTexture(GL_TEXTURE_2D, fake_box[SK].tex[WSKY_West]);
-        glNormal3i(+1, 0, 0);
-	#ifdef APPLE_SILICON
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	#endif
-	glBegin(GL_QUADS);
-	glTexCoord2f(v0, v0); glVertex3f(-dist, -dist, -dist);
-	glTexCoord2f(v0, v1); glVertex3f(-dist, -dist, +dist);
-	glTexCoord2f(v1, v1); glVertex3f(-dist,  dist, +dist);
-	glTexCoord2f(v1, v0); glVertex3f(-dist,  dist, -dist);
-	glEnd();
+	glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, fake_box[SK].tex[WSKY_West],
+			 ENV_NONE, 0, 0, BL_NoZBuf | BL_NoFog, &first_vert_index);
 
-	glDisable(GL_TEXTURE_2D);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+
+	local_verts[first_vert_index].texc->Set(v0, v0);
+	local_verts[first_vert_index].pos = {-dist, -dist, -dist};
+	local_verts[first_vert_index+1].texc->Set(v0, v1);
+	local_verts[first_vert_index+1].pos = {-dist, -dist, +dist};
+	local_verts[first_vert_index+2].texc->Set(v1, v1);
+	local_verts[first_vert_index+2].pos = {-dist, dist, +dist};
+	local_verts[first_vert_index+3].texc->Set(v1, v0);
+	local_verts[first_vert_index+3].pos = {-dist, dist, -dist};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = col[0];
+		local_verts[first_vert_index+i].rgba[1] = col[1];
+		local_verts[first_vert_index+i].rgba[2] = col[2];
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].normal.Set(+1, 0, 0);
+	}
+	RGL_EndUnit(4);
+
+	RGL_FinishUnits();
 
 	RGL_RevertSkyMatrices();
 }
@@ -554,8 +641,6 @@ void RGL_DrawSkyPlane(subsector_t *sub, float h)
 
 	MIR_Height(h);
 
-	glNormal3f(0, 0, (viewz > h) ? 1.0f : -1.0f);
-
 	seg_t *seg = sub->segs;
 	if (!seg)
 		return;
@@ -574,20 +659,44 @@ void RGL_DrawSkyPlane(subsector_t *sub, float h)
 	if (!seg)
 		return;
 
+	std::vector<vec3_t> plane_verts;
+
 	while(seg)
 	{
 		float x2 = seg->v1->x;
 		float y2 = seg->v1->y;
 		MIR_Coordinate(x2, y2);
 
-		glVertex3f(x0, y0, h);
-		glVertex3f(x1, y1, h);
-		glVertex3f(x2, y2, h);
+		plane_verts.push_back({x0, y0, h});
+		plane_verts.push_back({x1, y1, h});
+		plane_verts.push_back({x2, y2, h});
 
 		x1 = x2;
 		y1 = y2;
 		seg = seg->sub_next;
 	}
+
+	int num_verts = plane_verts.size();
+	int first_vert_index = 0;
+
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+				GL_TRIANGLES, num_verts, num_verts,
+				ENV_NONE, 0,
+				ENV_NONE, 0, 0, BL_NONE, &first_vert_index);
+
+	for (int i=0; i < num_verts; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = 1.0;
+		local_verts[first_vert_index+i].rgba[1] = 1.0;
+		local_verts[first_vert_index+i].rgba[2] = 1.0;
+		local_verts[first_vert_index+i].rgba[3] = 1.0;
+		local_verts[first_vert_index+i].normal.Set(0, 0, (viewz > h) ? 1.0f : -1.0f);
+		local_verts[first_vert_index+i].pos.Set(plane_verts[i].x, plane_verts[i].y, plane_verts[i].z);
+		glunit->indices[i] = first_vert_index+i;
+	}
+
+	RGL_EndUnit(num_verts);
+
 }
 
 
@@ -609,15 +718,30 @@ void RGL_DrawSkyWall(seg_t *seg, float h1, float h2)
 	MIR_Height(h1);
 	MIR_Height(h2);
 
-	glNormal3f(y2 - y1, x1 - x2, 0);
+	int first_vert_index = 0;
 
-	glVertex3f(x1, y1, h1);
-	glVertex3f(x1, y1, h2);
-	glVertex3f(x2, y2, h2);
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 6, 6,
+			 ENV_NONE, 0,
+			 ENV_NONE, 0, 0, BL_NONE, &first_vert_index);
 
-	glVertex3f(x2, y2, h1);
-	glVertex3f(x2, y2, h2);
-	glVertex3f(x1, y1, h1);
+	local_verts[first_vert_index].pos = {x1, y1, h1};
+	local_verts[first_vert_index+1].pos = {x1, y1, h2};
+	local_verts[first_vert_index+2].pos = {x2, y2, h2};
+	local_verts[first_vert_index+3].pos = {x2, y2, h1};
+	local_verts[first_vert_index+4].pos = {x2, y2, h2};
+	local_verts[first_vert_index+5].pos = {x1, y1, h1};
+	for (int i=0; i < 6; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = 1.0;
+		local_verts[first_vert_index+i].rgba[1] = 1.0;
+		local_verts[first_vert_index+i].rgba[2] = 1.0;
+		local_verts[first_vert_index+i].rgba[3] = 1.0;
+		local_verts[first_vert_index+i].normal.Set(y2-y1, x1-x2, 0);
+		glunit->indices[i] = first_vert_index+i;
+	}
+
+	RGL_EndUnit(6);
 }
 
 

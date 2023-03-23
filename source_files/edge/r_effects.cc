@@ -27,6 +27,7 @@
 #include "r_image.h"
 #include "r_modes.h"
 #include "r_texgl.h"
+#include "r_units.h"
 #include "w_wad.h"
 
 #define DEBUG  0
@@ -158,8 +159,8 @@ void RGL_RainbowEffect(player_t *player)
 //
 void RGL_ColourmapEffect(player_t *player)
 {
-	int x1, y1;
-	int x2, y2;
+	float x1, y1;
+	float x2, y2;
 
 	float s = EffectStrength(player);
 
@@ -176,29 +177,42 @@ void RGL_ColourmapEffect(player_t *player)
 		r = 1.0f; // MAX(0.5f, r) * (s + 1.0f) / 2.0f;
 		g = b = r;
 
-		glColor4f(r, g, b, 0.0f);
-
-		glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
-
-		glEnable(GL_BLEND);
-  
-		glBegin(GL_QUADS);
-
 		x1 = viewwindow_x;
 		x2 = viewwindow_x + viewwindow_w;
 
 		y1 = viewwindow_y + viewwindow_h;
 		y2 = viewwindow_y;
 
-		glVertex2i(x1, y1);
-		glVertex2i(x2, y1);
-		glVertex2i(x2, y2);
-		glVertex2i(x1, y2);
+		int first_vert_index = 0;
 
-		glEnd();
-  
-		glDisable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		RGL_StartUnits(false);
+
+		local_gl_unit_t * glunit = RGL_BeginUnit(
+				GL_TRIANGLES, 4, 6,
+				GL_MODULATE, 0,
+				ENV_NONE, 0, 0, BL_Invert | BL_Alpha | BL_NoZBuf, &first_vert_index);
+
+		glunit->indices[0] = first_vert_index;
+		glunit->indices[1] = first_vert_index + 1;
+		glunit->indices[2] = first_vert_index + 2;
+		glunit->indices[3] = first_vert_index;
+		glunit->indices[4] = first_vert_index + 2;
+		glunit->indices[5] = first_vert_index + 3;
+
+		local_verts[first_vert_index].pos = {x1, y1, 0.0f};
+		local_verts[first_vert_index+1].pos = {x2, y1, 0.0f};
+		local_verts[first_vert_index+2].pos = {x2, y2, 0.0f};
+		local_verts[first_vert_index+3].pos = {x1, y2, 0.0f};
+		for (int i=0; i < 4; i++)
+		{
+			local_verts[first_vert_index+i].rgba[0] = r;
+			local_verts[first_vert_index+i].rgba[1] = g;
+			local_verts[first_vert_index+i].rgba[2] = b;
+			local_verts[first_vert_index+i].rgba[3] = 0.0f;
+		}
+		RGL_EndUnit(4);
+
+		RGL_FinishUnits();
 	}
 }
 
@@ -212,8 +226,7 @@ void RGL_PaletteEffect(player_t *player)
 	byte rgb_data[3];
 
 	float s = EffectStrength(player);
-
-	std::vector<GLfloat> effect_colors;
+	float r, g, b;
 
 	if (s > 0 && player->powers[PW_Invulnerable] > 0 &&
 	    player->effect_colourmap && (player->effect_left & 8))
@@ -223,9 +236,8 @@ void RGL_PaletteEffect(player_t *player)
 	else if (s > 0 && player->powers[PW_NightVision] > 0 &&
 	         player->effect_colourmap)
 	{
-		float r, g, b;
 		V_GetColmapRGB(player->effect_colourmap, &r, &g, &b);
-		glColor4f(r, g, b, 0.20f * s);
+		s *= 0.20f;
 	}
 	else
 	{
@@ -238,24 +250,42 @@ void RGL_PaletteEffect(player_t *player)
 	  
 		rgb_max = MIN(200, rgb_max);
 
-		glColor4f((float) rgb_data[0] / (float) rgb_max,
-				  (float) rgb_data[1] / (float) rgb_max,
-				  (float) rgb_data[2] / (float) rgb_max,
-			      (float) rgb_max / 255.0f);
+		r = (float)rgb_data[0] / (float) rgb_max;
+		g = (float) rgb_data[1] / (float) rgb_max;
+		b = (float) rgb_data[2] / (float) rgb_max;
+		s = (float)rgb_max / 255.0f;
 	}
 
-	glEnable(GL_BLEND);
+	int first_vert_index = 0;
 
-	glBegin(GL_QUADS);
+	RGL_StartUnits(false);
 
-	glVertex2i(0, SCREENHEIGHT);
-	glVertex2i(SCREENWIDTH, SCREENHEIGHT);
-	glVertex2i(SCREENWIDTH, 0);
-	glVertex2i(0, 0);
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			GL_TRIANGLES, 4, 6,
+			GL_MODULATE, 0,
+			ENV_NONE, 0, 0, BL_Alpha | BL_NoZBuf, &first_vert_index);
 
-	glEnd();
-  
-	glDisable(GL_BLEND);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+
+	local_verts[first_vert_index].pos = {0.0f, (float)SCREENHEIGHT, 0.0f};
+	local_verts[first_vert_index+1].pos = {(float)SCREENWIDTH, (float)SCREENHEIGHT, 0.0f};
+	local_verts[first_vert_index+2].pos = {(float)SCREENWIDTH, 0.0f, 0.0f};
+	local_verts[first_vert_index+3].pos = {0.0f, 0.0f, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = s;
+	}
+	RGL_EndUnit(4);
+
+	RGL_FinishUnits();
 }
 
 

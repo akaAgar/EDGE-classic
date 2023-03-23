@@ -735,14 +735,38 @@ public:
 		GLuint tex, float alpha, int *pass_var, int blending,
 		bool masked, void *data, shader_coord_func_t func)
 	{
-		local_gl_vert_t * glvert = RGL_BeginUnit(shape, num_vert,
-				GL_MODULATE, tex,
+		int first_vert_index = 0;
+
+		local_gl_unit_t * glunit = RGL_BeginUnit(GL_TRIANGLES, num_vert,
+				GL_POLYGON ? ((num_vert-2) * 3) : ((num_vert/2-1) * 6), GL_MODULATE, tex,
 				(simple_cmap || r_dumbmulti.d) ? GL_MODULATE : GL_DECAL,
-				fade_tex, *pass_var, blending);
+				fade_tex, *pass_var, blending, &first_vert_index);
+
+		if (shape == GL_POLYGON)
+		{
+			for (int ind = 0, v_idx = 2; v_idx < num_vert; v_idx++)
+			{
+				glunit->indices[ind++] = first_vert_index;
+				glunit->indices[ind++] = first_vert_index + v_idx - 1;
+				glunit->indices[ind++] = first_vert_index + v_idx;
+			}
+		}
+		else // GL_QUAD_STRIP
+		{
+			for (int ind = 0, v_idx = 0; v_idx + 3 < num_vert; v_idx += 4)
+			{
+				glunit->indices[ind++] = first_vert_index;
+				glunit->indices[ind++] = first_vert_index + v_idx + 1;
+				glunit->indices[ind++] = first_vert_index + v_idx + 2;
+				glunit->indices[ind++] = first_vert_index + v_idx;
+				glunit->indices[ind++] = first_vert_index + v_idx + 2;
+				glunit->indices[ind++] = first_vert_index + v_idx + 3;
+			}
+		}
 
 		for (int v_idx=0; v_idx < num_vert; v_idx++)
 		{
-			local_gl_vert_t *dest = glvert + v_idx;
+			local_gl_vert_t *dest = &local_verts[first_vert_index + v_idx];
 
 			dest->rgba[3] = alpha;
 

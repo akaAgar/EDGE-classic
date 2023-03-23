@@ -54,8 +54,7 @@ DEF_CVAR(r_dumbcombine,   "0", 0)
 DEF_CVAR(r_dumbclamp,     DUMB_CLAMP, 0)
 
 
-#define MAX_L_VERT  4096 * 24
-#define MAX_L_UNIT  (MAX_L_VERT / 3)
+#define MAX_L_UNIT  2000
 
 #define DUMMY_CLAMP  789
 
@@ -64,31 +63,7 @@ extern cvar_c r_cullfog;
 extern cvar_c r_fogofwar;
 extern bool need_to_draw_sky;
 
-// a single unit (polygon, quad, etc) to pass to the GL
-typedef struct local_gl_unit_s
-{
-	// unit mode (e.g. GL_TRIANGLE_FAN)
-	GLuint shape;
-
-	// environment modes (GL_REPLACE, GL_MODULATE, GL_DECAL, GL_ADD)
-	GLuint env[2];
-
-	// texture(s) used
-	GLuint tex[2];
-
-	// pass number (multiple pass rendering)
-	int pass;
-
-	// blending flags
-	int blending;
-
-	// range of local vertices
-	int first, count;
-}
-local_gl_unit_t;
-
-
-static local_gl_vert_t local_verts[MAX_L_VERT];
+local_gl_vert_t local_verts[MAX_L_VERT];
 static local_gl_unit_t local_units[MAX_L_UNIT];
 
 static std::vector<local_gl_unit_t *> local_unit_map;
@@ -118,6 +93,19 @@ void RGL_InitUnits(void)
 //
 void RGL_SoftInitUnits()
 {
+	// setup pointers to client state
+	glVertexPointer(3, GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].pos.x);
+	glColorPointer (4, GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].rgba);
+	glNormalPointer(GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].normal.x);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glClientActiveTexture(GL_TEXTURE0);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].texc[0]);
+	glClientActiveTexture(GL_TEXTURE1);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].texc[1]);
 }
 
 
@@ -149,7 +137,6 @@ void RGL_FinishUnits(void)
 	RGL_DrawUnits();
 }
 
-
 static inline void myActiveTexture(GLuint id)
 {
 #ifndef EDGE_GL_ES2	
@@ -159,18 +146,6 @@ static inline void myActiveTexture(GLuint id)
 		glActiveTextureARB(id);
 #else
 	glActiveTexture(id);
-#endif
-}
-
-static inline void myMultiTexCoord2f(GLuint id, GLfloat s, GLfloat t)
-{
-#ifndef EDGE_GL_ES2		
-	if (GLAD_GL_VERSION_1_3)
-		glMultiTexCoord2f(id, s, t);
-	else /* GLEW_ARB_multitexture */
-		glMultiTexCoord2fARB(id, s, t);
-#else
-	glMultiTexCoord2f(id, s, t);
 #endif
 }
 
@@ -184,10 +159,11 @@ static inline void myMultiTexCoord2f(GLuint id, GLfloat s, GLfloat t)
 // contains "holes" (like sprites).  `blended' should be true if the
 // texture should be blended (like for translucent water or sprites).
 //
-local_gl_vert_t *RGL_BeginUnit(GLuint shape, int max_vert, 
+local_gl_unit_t *RGL_BeginUnit(GLuint shape, int max_vert, int max_index,
 		                       GLuint env1, GLuint tex1,
 							   GLuint env2, GLuint tex2,
-							   int pass, int blending)
+							   int pass, int blending,
+							   int *first_vert_index)
 {
 	local_gl_unit_t *unit;
 
@@ -215,9 +191,15 @@ local_gl_vert_t *RGL_BeginUnit(GLuint shape, int max_vert,
 
 	unit->pass     = pass;
 	unit->blending = blending;
-	unit->first    = cur_vert;  // count set later
 
-	return local_verts + cur_vert;
+	if (unit->indices.size() < max_index)
+		unit->indices.resize(max_index);
+
+	unit->v_count = 0;
+	unit->i_count = max_index;
+
+	*first_vert_index = cur_vert;
+	return unit;
 }
 
 //
@@ -231,7 +213,7 @@ void RGL_EndUnit(int actual_vert)
 
 	unit = local_units + cur_unit;
 
-	unit->count = actual_vert;
+	unit->v_count = actual_vert;
 
 	// adjust colors (for special effects)
 	for (int i = 0; i < actual_vert; i++)
@@ -296,46 +278,6 @@ static void EnableCustomEnv(GLuint env, bool enable)
 		default:
 			I_Error("INTERNAL ERROR: no such custom env: %08x\n", env);
 	}
-}
-
-static inline void RGL_SendRawVector(const local_gl_vert_t *V)
-{
-	if (r_colormaterial.d || ! r_colorlighting.d)
-		glColor4fv(V->rgba);
-	else
-	{
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, V->rgba);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, V->rgba);
-	}
-
-	myMultiTexCoord2f(GL_TEXTURE0, V->texc[0].x, V->texc[0].y);
-	myMultiTexCoord2f(GL_TEXTURE1, V->texc[1].x, V->texc[1].y);
-
-	glNormal3f(V->normal.x, V->normal.y, V->normal.z);
-
-	// I don't think we need glEdgeFlag anymore; from what I've read this only
-	// matters if we switch glPolygonMode away from GL_FILL - Dasho
-	//glEdgeFlag(V->edge);
-
-	// vertex must be last
-	glVertex3f(V->pos.x, V->pos.y, V->pos.z);
-}
-
-static GLuint current_shape = 0;
-
-// Only open/close a glBegin/glEnd if needed
-void RGL_BatchShape(GLuint shape)
-{
-	if (current_shape == shape)
-		return;
-
-	if (current_shape != 0)
-		glEnd();
-
-	current_shape = shape;
-
-	if (current_shape != 0)
-		glBegin(shape);
 }
 
 //
@@ -446,8 +388,6 @@ void RGL_DrawUnits(void)
 		glClearColor(fogColor[0],fogColor[1],fogColor[2],fogColor[3]);
 
 		glFogi(GL_FOG_MODE, GL_LINEAR);
-		//glFogi(GL_FOG_MODE, GL_EXP2);
-		//glFogf(GL_FOG_DENSITY, 0.002f); //only use with GL_EXP2
 		glFogfv(GL_FOG_COLOR, fogColor);
 		if (r_culling.d)
 		{
@@ -466,7 +406,7 @@ void RGL_DrawUnits(void)
 	{
 		local_gl_unit_t *unit = local_unit_map[j];
 
-		SYS_ASSERT(unit->count > 0);
+		SYS_ASSERT(unit->v_count > 0 && unit->i_count > 0);
 
 		// detect changes in texture/alpha/blending state
 
@@ -474,13 +414,11 @@ void RGL_DrawUnits(void)
 		{
 			active_pass = unit->pass;
 
-			RGL_BatchShape(0);
 			glPolygonOffset(0, -active_pass);
 		}
 
 		if ((active_blending ^ unit->blending) & (BL_Masked | BL_Less))
 		{
-			RGL_BatchShape(0);
 			if (unit->blending & BL_Less)
 			{
 				// glAlphaFunc is updated below, because the alpha
@@ -499,7 +437,6 @@ void RGL_DrawUnits(void)
 
 		if ((active_blending ^ unit->blending) & (BL_Alpha | BL_Add))
 		{
-			RGL_BatchShape(0);
 			if (unit->blending & BL_Add)
 			{
 				glEnable(GL_BLEND);
@@ -516,7 +453,6 @@ void RGL_DrawUnits(void)
 
 		if ((active_blending ^ unit->blending) & BL_CULL_BOTH)
 		{
-			RGL_BatchShape(0);
 			if (unit->blending & BL_CULL_BOTH)
 			{
 				glEnable(GL_CULL_FACE);
@@ -528,7 +464,6 @@ void RGL_DrawUnits(void)
 
 		if ((active_blending ^ unit->blending) & BL_NoZBuf)
 		{
-			RGL_BatchShape(0);
 			glDepthMask((unit->blending & BL_NoZBuf) ? GL_FALSE : GL_TRUE);
 		}
 
@@ -536,17 +471,30 @@ void RGL_DrawUnits(void)
 
 		if (active_blending & BL_Less)
 		{
-			// NOTE: assumes alpha is constant over whole polygon
-			float a = local_verts[unit->first].rgba[3];
-			RGL_BatchShape(0);
-			glAlphaFunc(GL_GREATER, a * 0.66f);
+			// NOTE: assumes alpha is constant over whole unit
+			float a = local_verts[unit->indices[0]].rgba[3];
+			glAlphaFunc(GL_GREATER, a * 0.66f); // Should this be GL_LESS now ?
+		}
+
+		if (active_blending & BL_Greater)
+			glAlphaFunc(GL_GREATER, unit->alpha_test_value);
+
+		if (active_blending & BL_GEqual)
+			glAlphaFunc(GL_GEQUAL, unit->alpha_test_value);
+
+		if (active_blending & BL_Invert)
+			glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+
+		if (r_fogofwar.d || r_culling.d)
+		{
+			if ((unit->blending & BL_NoFog) == BL_NoFog)
+				glDisable(GL_FOG);
 		}
 
 		for (int t=1; t >= 0; t--)
 		{
 			if (active_tex[t] != unit->tex[t] || active_env[t] != unit->env[t])
 			{
-				RGL_BatchShape(0);
 				myActiveTexture(GL_TEXTURE0 + t);
 			}
 
@@ -592,62 +540,39 @@ void RGL_DrawUnits(void)
 			}
 		}
 
-		GLint old_clamp = DUMMY_CLAMP;
+		GLint old_xclamp = DUMMY_CLAMP;
+		GLint old_yclamp = DUMMY_CLAMP;
 
 		if ((active_blending & BL_ClampY) && active_tex[0] != 0)
 		{
-			RGL_BatchShape(0);
-			glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &old_clamp);
+			glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &old_yclamp);
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
 				r_dumbclamp.d ? GL_CLAMP : GL_CLAMP_TO_EDGE);
 		}
 
-		// Simplify things into triangles as that allows us to keep a single glBegin open for longer
-		if (unit->shape == GL_POLYGON || unit->shape == GL_TRIANGLE_FAN)
+		if ((active_blending & BL_RepeatX) && active_tex[0] != 0)
 		{
-			RGL_BatchShape(GL_TRIANGLES);
-			for (int v_idx = 2; v_idx < unit->count; v_idx++)
-			{
-				RGL_SendRawVector(local_verts + unit->first);
-				RGL_SendRawVector(local_verts + unit->first + v_idx - 1);
-				RGL_SendRawVector(local_verts + unit->first + v_idx);
-			}
+			glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, &old_xclamp);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		}
-		else if (unit->shape == GL_QUADS)
+
+		if ((active_blending & BL_RepeatY) && active_tex[0] != 0)
 		{
-			RGL_BatchShape(GL_TRIANGLES);
-			for (int v_idx = 0; v_idx + 3 < unit->count; v_idx += 4)
-			{
-				RGL_SendRawVector(local_verts + unit->first + v_idx);
-				RGL_SendRawVector(local_verts + unit->first + v_idx + 1);
-				RGL_SendRawVector(local_verts + unit->first + v_idx + 2);
-				RGL_SendRawVector(local_verts + unit->first + v_idx);
-				RGL_SendRawVector(local_verts + unit->first + v_idx + 2);
-				RGL_SendRawVector(local_verts + unit->first + v_idx + 3);
-			}
+			glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &old_yclamp);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		}
-		else
-		{
-			RGL_BatchShape(unit->shape);
-			for (int v_idx = 0; v_idx < unit->count; v_idx++)
-			{
-				RGL_SendRawVector(local_verts + unit->first + v_idx);
-			}
-		}
+
+		glDrawElements(unit->shape, unit->i_count, GL_UNSIGNED_SHORT, unit->indices.data());
 		
-		if (unit->shape != GL_TRIANGLES && unit->shape != GL_LINES && unit->shape != GL_QUADS)
-			RGL_BatchShape(0);
-
-		// restore the clamping mode
-		if (old_clamp != DUMMY_CLAMP)
-		{
-			RGL_BatchShape(0);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, old_clamp);
-		}
+		// restore the clamping modes
+		if (old_xclamp != DUMMY_CLAMP)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, old_yclamp);
+		if (old_yclamp != DUMMY_CLAMP)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, old_yclamp);
 	}
-
-	RGL_BatchShape(0);
 
 	// all done
 	cur_vert = cur_unit = 0;
@@ -675,8 +600,6 @@ void RGL_DrawUnits(void)
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glAlphaFunc(GL_GREATER, 0);
-
-
 
 	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);

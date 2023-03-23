@@ -341,14 +341,23 @@ static void RGL_DrawPSprite(pspdef_t * psp, int which,
 
 		GLuint fuzz_tex = is_fuzzy ? W_ImageCache(fuzz_image, false) : 0;
 
-		local_gl_vert_t * glvert = RGL_BeginUnit(GL_POLYGON, 4,
+		int first_vert_index = 0;
+
+		local_gl_unit_t * glunit = RGL_BeginUnit(GL_TRIANGLES, 4, 6,
 				 is_additive ? ENV_SKIP_RGB : GL_MODULATE, tex_id,
 				 is_fuzzy ? GL_MODULATE : ENV_NONE, fuzz_tex,
-				 pass, blending);
+				 pass, blending, &first_vert_index);
+
+		glunit->indices[0] = first_vert_index;
+		glunit->indices[1] = first_vert_index + 1;
+		glunit->indices[2] = first_vert_index + 2;
+		glunit->indices[3] = first_vert_index;
+		glunit->indices[4] = first_vert_index + 2;
+		glunit->indices[5] = first_vert_index + 3;
 
 		for (int v_idx=0; v_idx < 4; v_idx++)
 		{
-			local_gl_vert_t *dest = glvert + v_idx;
+			local_gl_vert_t *dest = &local_verts[first_vert_index + v_idx];
 
 			dest->pos     = data.vert[v_idx];
 			dest->texc[0] = data.texc[v_idx];
@@ -418,7 +427,6 @@ static void DrawStdCrossHair(void)
 
 	GLuint tex_id = W_ImageCache(crosshair_image);
 
-
 	static int xh_count = 0;
 	static int xh_dir = 1;
 
@@ -430,7 +438,6 @@ static void DrawStdCrossHair(void)
 
 	xh_count += xh_dir;
 
-
 	rgbcol_t color = crosshair_colors[r_crosscolor.d & 7];
 	float intensity = 1.0f - xh_count / 100.0f;
 
@@ -440,36 +447,45 @@ static void DrawStdCrossHair(void)
 	float g = RGB_GRN(color) * intensity / 255.0f;
 	float b = RGB_BLU(color) * intensity / 255.0f;
 
-
 	float x = viewwindow_x + viewwindow_w / 2;
 	float y = viewwindow_y + viewwindow_h / 2;
 
 	float w = I_ROUND(SCREENWIDTH * r_crosssize.f / 640.0f);
 
+	int first_vert_index = 0;
 
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
+	RGL_StartUnits(false);
 
-	glBindTexture(GL_TEXTURE_2D, tex_id);
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, tex_id,
+			 ENV_NONE, 0, 0, BL_Alpha | BL_Add | BL_NoZBuf, &first_vert_index);
 
-	// additive blending
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
 
-	glColor3f(r, g, b);
+	local_verts[first_vert_index].texc->Set(0.0f, 0.0f);
+	local_verts[first_vert_index].pos = {x-w, y-w, 0.0f};
+	local_verts[first_vert_index+1].texc->Set(0.0f, 1.0f);
+	local_verts[first_vert_index+1].pos = {x-w, y+w, 0.0f};
+	local_verts[first_vert_index+2].texc->Set(1.0f, 1.0f);
+	local_verts[first_vert_index+2].pos = {x+w, y+w, 0.0f};
+	local_verts[first_vert_index+3].texc->Set(1.0f, 0.0f);
+	local_verts[first_vert_index+3].pos = {x+w, y-w, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+	}
+	RGL_EndUnit(4);
 
-	glBegin(GL_POLYGON);
-
-	glTexCoord2f(0.0f, 0.0f); glVertex2f(x-w, y-w);
-	glTexCoord2f(0.0f, 1.0f); glVertex2f(x-w, y+w);
-	glTexCoord2f(1.0f, 1.0f); glVertex2f(x+w, y+w);
-	glTexCoord2f(1.0f, 0.0f); glVertex2f(x+w, y-w);
-
-	glEnd();
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
+	RGL_FinishUnits();
 }
 
 
@@ -617,26 +633,20 @@ void RGL_DrawWeaponModel(player_t * p)
 		lerp = CLAMP(0, lerp, 1);
 	}
 
-	float bias = 0.0f;
-
-	bias = VM_GetFloat(ui_vm, "hud", "universal_y_adjust") + p->weapons[p->ready_wp].info->y_adjust;
-	bias /= 5;
-	bias += w->model_bias;
-
 	if (md->md2_model)
 		MD2_RenderModel(md->md2_model, skin_img, true,
 						last_frame, psp->state->frame, lerp,
 						x, y, z, p->mo, view_props,
-						1.0f /* scale */, w->model_aspect, bias, w->model_rotate);
+						1.0f /* scale */, w->model_aspect, w->model_bias, w->model_rotate);
 	else if (md->mdl_model)
 		MDL_RenderModel(md->mdl_model, skin_img, true,
 						last_frame, psp->state->frame, lerp,
 						x, y, z, p->mo, view_props,
-						1.0f /* scale */, w->model_aspect, bias, w->model_rotate);
+						1.0f /* scale */, w->model_aspect, w->model_bias, w->model_rotate);
 	else
 		VXL_RenderModel(md->vxl_model, true,
 						x, y, z, p->mo, view_props,
-						1.0f /* scale */, w->model_aspect, bias, w->model_rotate);
+						1.0f /* scale */, w->model_aspect, w->model_bias, w->model_rotate);
 }
 
 
@@ -1427,14 +1437,23 @@ void RGL_DrawThing(drawfloor_t *dfloor, drawthing_t *dthing)
 
 		GLuint fuzz_tex = is_fuzzy ? W_ImageCache(fuzz_image, false) : 0;
 
-		local_gl_vert_t * glvert = RGL_BeginUnit(GL_POLYGON, 4,
+		int first_vert_index = 0;
+
+		local_gl_unit_t * glunit = RGL_BeginUnit(GL_TRIANGLES, 4, 6,
 				 is_additive ? ENV_SKIP_RGB : GL_MODULATE, tex_id,
 				 is_fuzzy ? GL_MODULATE : ENV_NONE, fuzz_tex,
-				 pass, blending);
+				 pass, blending, &first_vert_index);
+
+		glunit->indices[0] = first_vert_index;
+		glunit->indices[1] = first_vert_index + 1;
+		glunit->indices[2] = first_vert_index + 2;
+		glunit->indices[3] = first_vert_index;
+		glunit->indices[4] = first_vert_index + 2;
+		glunit->indices[5] = first_vert_index + 3;
 
 		for (int v_idx=0; v_idx < 4; v_idx++)
 		{
-			local_gl_vert_t *dest = glvert + v_idx;
+			local_gl_vert_t *dest = &local_verts[first_vert_index + v_idx];
 
 			dest->pos     = data.vert[v_idx];
 			dest->texc[0] = data.texc[v_idx];

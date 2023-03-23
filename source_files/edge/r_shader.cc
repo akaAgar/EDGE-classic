@@ -352,16 +352,41 @@ public:
 			float B = L * RGB_BLU(col) / 255.0;
 
 
-			local_gl_vert_t *glvert = RGL_BeginUnit(shape, num_vert,
+			int first_vert_index = 0;
+
+			local_gl_unit_t *glunit = RGL_BeginUnit(GL_TRIANGLES, num_vert,
+						GL_POLYGON ? ((num_vert-2) * 3) : ((num_vert/2 -1) * 6),
 						(is_additive && masked) ? ENV_SKIP_RGB :
 						 is_additive ? ENV_NONE : GL_MODULATE,
 						(is_additive && !masked) ? 0 : tex,
 						GL_MODULATE, lim[DL]->tex_id(),
-						*pass_var, blending);
+						*pass_var, blending, &first_vert_index);
+
+			if (shape == GL_POLYGON)
+			{
+				for (int ind = 0, v_idx = 2; v_idx < num_vert; v_idx++)
+				{
+					glunit->indices[ind++] = first_vert_index;
+					glunit->indices[ind++] = first_vert_index + v_idx - 1;
+					glunit->indices[ind++] = first_vert_index + v_idx;
+				}
+			}
+			else // GL_QUAD_STRIP
+			{
+				for (int ind = 0, v_idx = 0; v_idx + 3 < num_vert; v_idx += 4)
+				{
+					glunit->indices[ind++] = first_vert_index;
+					glunit->indices[ind++] = first_vert_index + v_idx + 1;
+					glunit->indices[ind++] = first_vert_index + v_idx + 2;
+					glunit->indices[ind++] = first_vert_index + v_idx;
+					glunit->indices[ind++] = first_vert_index + v_idx + 2;
+					glunit->indices[ind++] = first_vert_index + v_idx + 3;
+				}
+			}
 
 			for (int v_idx=0; v_idx < num_vert; v_idx++)
 			{
-				local_gl_vert_t *dest = glvert + v_idx;
+				local_gl_vert_t *dest = &local_verts[first_vert_index + v_idx];
 
 				vec3_t lit_pos;
 
@@ -550,17 +575,41 @@ public:
 			float G = L * RGB_GRN(col) / 255.0;
 			float B = L * RGB_BLU(col) / 255.0;
 
+			int first_vert_index = 0;
 
-			local_gl_vert_t *glvert = RGL_BeginUnit(shape, num_vert,
+			local_gl_unit_t *glunit = RGL_BeginUnit(GL_TRIANGLES, num_vert,
+						GL_POLYGON ? ((num_vert-2) * 3) : ((num_vert/2 -1) * 6),
 						(is_additive && masked) ? ENV_SKIP_RGB :
 						 is_additive ? ENV_NONE : GL_MODULATE,
 						(is_additive && !masked) ? 0 : tex,
 						GL_MODULATE, lim[DL]->tex_id(),
-						*pass_var, blending);
-			
+						*pass_var, blending, &first_vert_index);
+
+			if (shape == GL_POLYGON)
+			{
+				for (int ind = 0, v_idx = 2; v_idx < num_vert; v_idx++)
+				{
+					glunit->indices[ind++] = first_vert_index;
+					glunit->indices[ind++] = first_vert_index + v_idx - 1;
+					glunit->indices[ind++] = first_vert_index + v_idx;
+				}
+			}
+			else // GL_QUAD_STRIP
+			{
+				for (int ind = 0, v_idx = 0; v_idx + 3 < num_vert; v_idx += 4)
+				{
+					glunit->indices[ind++] = first_vert_index;
+					glunit->indices[ind++] = first_vert_index + v_idx + 1;
+					glunit->indices[ind++] = first_vert_index + v_idx + 2;
+					glunit->indices[ind++] = first_vert_index + v_idx;
+					glunit->indices[ind++] = first_vert_index + v_idx + 2;
+					glunit->indices[ind++] = first_vert_index + v_idx + 3;
+				}
+			}
+
 			for (int v_idx=0; v_idx < num_vert; v_idx++)
 			{
-				local_gl_vert_t *dest = glvert + v_idx;
+				local_gl_vert_t *dest = &local_verts[first_vert_index + v_idx];
 
 				vec3_t lit_pos;
 

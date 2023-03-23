@@ -32,6 +32,8 @@
 #include "gl4esinit.h"
 #endif
 
+#define BUFFER_OFFSET(i) ((void*)(i))
+
 #define USING_GL_TYPES 1
 
 #endif /* __SYSTEM_SPECIFIC_DEFS_OPENGL__ */

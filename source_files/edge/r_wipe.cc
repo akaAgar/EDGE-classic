@@ -34,8 +34,7 @@
 #include "r_image.h"
 #include "r_modes.h"
 #include "r_texgl.h"
-
-//#include <vector>
+#include "r_units.h"
 
 extern cvar_c r_doubleframes;
 
@@ -76,7 +75,6 @@ static void CaptureScreenAsTexture(bool speckly, bool spooky)
 
 	cur_wipe_right = SCREENWIDTH  / (float)total_w;
 	cur_wipe_top   = SCREENHEIGHT / (float)total_h;
-
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -180,58 +178,71 @@ void RGL_StopWipe(void)
 
 static void RGL_Wipe_Fading(float how_far)
 {
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
+	int first_vert_index = 0;
 
-	glBindTexture(GL_TEXTURE_2D, cur_wipe_tex);
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f - how_far);
+	local_gl_unit_t *glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, cur_wipe_tex,
+			 ENV_NONE, 0, 0, BL_Alpha | BL_NoZBuf, &first_vert_index);
 
-	glBegin(GL_QUADS);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
 
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2i(0, 0);
-	glTexCoord2f(0.0f, cur_wipe_top);
-	glVertex2i(0, SCREENHEIGHT);
-	glTexCoord2f(cur_wipe_right, cur_wipe_top);
-	glVertex2i(SCREENWIDTH, SCREENHEIGHT);
-	glTexCoord2f(cur_wipe_right, 0.0f);
-	glVertex2i(SCREENWIDTH, 0);
-
-	glEnd();
-
-	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
+	local_verts[first_vert_index].texc->Set(0.0f, 0.0f);
+	local_verts[first_vert_index].pos = {0.0f, 0.0f, 0.0f};
+	local_verts[first_vert_index+1].texc->Set(0.0f, cur_wipe_top);
+	local_verts[first_vert_index+1].pos = {0, (float)SCREENHEIGHT, 0.0f};
+	local_verts[first_vert_index+2].texc->Set(cur_wipe_right, cur_wipe_top);
+	local_verts[first_vert_index+2].pos = {(float)SCREENWIDTH, (float)SCREENHEIGHT, 0.0f};
+	local_verts[first_vert_index+3].texc->Set(cur_wipe_right, 0.0f);
+	local_verts[first_vert_index+3].pos = {(float)SCREENWIDTH, 0.0f, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = 1.0f;
+		local_verts[first_vert_index+i].rgba[1] = 1.0f;
+		local_verts[first_vert_index+i].rgba[2] = 1.0f;
+		local_verts[first_vert_index+i].rgba[3] = 1.0f - how_far;
+	}
+	RGL_EndUnit(4);
 }
 
 static void RGL_Wipe_Pixelfade(float how_far)
 {
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
-	glEnable(GL_ALPHA_TEST);
+	int first_vert_index = 0;
+	local_gl_unit_t *glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, cur_wipe_tex,
+			 ENV_NONE, 0, 0, BL_Alpha | BL_GEqual | BL_NoZBuf, &first_vert_index);
 
-	glAlphaFunc(GL_GEQUAL, how_far);
+	glunit->alpha_test_value = how_far;
 
-	glBindTexture(GL_TEXTURE_2D, cur_wipe_tex);
-	glColor3f(1.0f, 1.0f, 1.0f);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
 
-	glBegin(GL_QUADS);
-
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2i(0, 0);
-	glTexCoord2f(0.0f, cur_wipe_top);
-	glVertex2i(0, SCREENHEIGHT);
-	glTexCoord2f(cur_wipe_right, cur_wipe_top);
-	glVertex2i(SCREENWIDTH, SCREENHEIGHT);
-	glTexCoord2f(cur_wipe_right, 0.0f);
-	glVertex2i(SCREENWIDTH, 0);
-
-	glEnd();
-
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
-
-	glAlphaFunc(GL_GREATER, 0);
+	local_verts[first_vert_index].texc->Set(0.0f, 0.0f);
+	local_verts[first_vert_index].pos = {0.0f, 0.0f, 0.0f};
+	local_verts[first_vert_index+1].texc->Set(0.0f, cur_wipe_top);
+	local_verts[first_vert_index+1].pos = {0.0f, (float)SCREENHEIGHT, 0.0f};
+	local_verts[first_vert_index+2].texc->Set(cur_wipe_right, cur_wipe_top);
+	local_verts[first_vert_index+2].pos = {(float)SCREENWIDTH, (float)SCREENHEIGHT, 0.0f};
+	local_verts[first_vert_index+3].texc->Set(cur_wipe_right, 0.0f);
+	local_verts[first_vert_index+3].pos = {(float)SCREENWIDTH, 0.0f, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = 1.0f;
+		local_verts[first_vert_index+i].rgba[1] = 1.0f;
+		local_verts[first_vert_index+i].rgba[2] = 1.0f;
+		local_verts[first_vert_index+i].rgba[3] = 1.0f - how_far;
+	}
+	RGL_EndUnit(4);
 }
 
 static void RGL_Wipe_Melt(void)
@@ -271,39 +282,41 @@ static void RGL_Wipe_Slide(float how_far, float dx, float dy)
 	dx *= how_far;
 	dy *= how_far;
 
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
+	int first_vert_index = 0;
+	local_gl_unit_t *glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, cur_wipe_tex,
+			 ENV_NONE, 0, 0, BL_Alpha | BL_NoZBuf, &first_vert_index);
 
-	glBindTexture(GL_TEXTURE_2D, cur_wipe_tex);
-	glColor3f(1.0f, 1.0f, 1.0f);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
 
-	glBegin(GL_QUADS);
-
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(dx, dy);
-	glTexCoord2f(0.0f, cur_wipe_top);
-	glVertex2f(dx, dy + SCREENHEIGHT);
-	glTexCoord2f(cur_wipe_right, cur_wipe_top);
-	glVertex2f(dx + SCREENWIDTH, dy + SCREENHEIGHT);
-	glTexCoord2f(cur_wipe_right, 0.0f);
-	glVertex2f(dx + SCREENWIDTH, dy);
-
-	glEnd();
-
-	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
+	local_verts[first_vert_index].texc->Set(0.0f, 0.0f);
+	local_verts[first_vert_index].pos = {dx, dy, 0.0f};
+	local_verts[first_vert_index+1].texc->Set(0.0f, cur_wipe_top);
+	local_verts[first_vert_index+1].pos = {dx, dy+(float)SCREENHEIGHT, 0.0f};
+	local_verts[first_vert_index+2].texc->Set(cur_wipe_right, cur_wipe_top);
+	local_verts[first_vert_index+2].pos = {dx+(float)SCREENWIDTH, dy+(float)SCREENHEIGHT, 0.0f};
+	local_verts[first_vert_index+3].texc->Set(cur_wipe_right, 0.0f);
+	local_verts[first_vert_index+3].pos = {dx+(float)SCREENWIDTH, dy, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = 1.0f;
+		local_verts[first_vert_index+i].rgba[1] = 1.0f;
+		local_verts[first_vert_index+i].rgba[2] = 1.0f;
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+	}
+	RGL_EndUnit(4);
 }
 
 static void RGL_Wipe_Doors(float how_far)
 {
 	float dx = cos(how_far * M_PI / 2) * (SCREENWIDTH/2);
 	float dy = sin(how_far * M_PI / 2) * (SCREENHEIGHT/3);
-
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
-
-	glBindTexture(GL_TEXTURE_2D, cur_wipe_tex);
-	glColor3f(1.0f, 1.0f, 1.0f);
 
 	for (int column = 0; column < 5; column++)
 	{
@@ -321,7 +334,39 @@ static void RGL_Wipe_Doors(float how_far)
 			float v_y1 = (side == 0) ? (dy * e) : (dy * (e + 0.2f));
 			float v_y2 = (side == 1) ? (dy * e) : (dy * (e + 0.2f));
 
-			glBegin(GL_QUAD_STRIP);
+			int first_vert_index = 0;
+
+			local_gl_unit_t * glunit = RGL_BeginUnit(GL_TRIANGLES, 12,
+					30, GL_MODULATE, cur_wipe_tex, GL_MODULATE,
+					0, 0, BL_Alpha | BL_NoZBuf, &first_vert_index);
+
+			int ind = 0;
+
+			for (int flip = 0, v_idx = 0; v_idx + 3 < 12; v_idx += 2, flip++)
+			{
+				if (flip % 2 == 1)
+				{
+					glunit->indices[ind++] = first_vert_index + v_idx;
+					glunit->indices[ind++] = first_vert_index + v_idx + 1;
+					glunit->indices[ind++] = first_vert_index + v_idx + 2;
+					glunit->indices[ind++] = first_vert_index + v_idx;
+					glunit->indices[ind++] = first_vert_index + v_idx + 2;
+					glunit->indices[ind++] = first_vert_index + v_idx + 3;
+				}
+				else
+				{
+					glunit->indices[ind++] = first_vert_index + v_idx;
+					glunit->indices[ind++] = first_vert_index + v_idx + 2;
+					glunit->indices[ind++] = first_vert_index + v_idx + 3;
+					glunit->indices[ind++] = first_vert_index + v_idx;
+					glunit->indices[ind++] = first_vert_index + v_idx + 1;
+					glunit->indices[ind++] = first_vert_index + v_idx + 2;
+				}
+			}
+
+			I_Printf("IND: %d\n", ind);
+
+			int cur_index = 0;
 
 			for (int row = 0; row <= 5; row++)
 			{
@@ -330,19 +375,25 @@ static void RGL_Wipe_Doors(float how_far)
 				float j1 = (SCREENHEIGHT - v_y1 * 2.0f) / 5.0f;
 				float j2 = (SCREENHEIGHT - v_y2 * 2.0f) / 5.0f;
 
-				glTexCoord2f(t_x2 * cur_wipe_right, t_y);
-				glVertex2f(v_x2, v_y2 + j2 * row);
-
-				glTexCoord2f(t_x1 * cur_wipe_right, t_y);
-				glVertex2f(v_x1, v_y1 + j1 * row);
+				local_verts[first_vert_index+cur_index].texc->Set(t_x2 * cur_wipe_right, t_y);
+				local_verts[first_vert_index+cur_index].pos = {v_x2, v_y2 + j2 * row};
+				local_verts[first_vert_index+cur_index].rgba[0] = 1.0f;
+				local_verts[first_vert_index+cur_index].rgba[1] = 1.0f;
+				local_verts[first_vert_index+cur_index].rgba[2] = 1.0f;
+				local_verts[first_vert_index+cur_index].rgba[3] = 1.0f;
+				cur_index++;
+				local_verts[first_vert_index+cur_index].texc->Set(t_x1 * cur_wipe_right, t_y);
+				local_verts[first_vert_index+cur_index].pos = {v_x1, v_y1 + j1 * row};
+				local_verts[first_vert_index+cur_index].rgba[0] = 1.0f;
+				local_verts[first_vert_index+cur_index].rgba[1] = 1.0f;
+				local_verts[first_vert_index+cur_index].rgba[2] = 1.0f;
+				local_verts[first_vert_index+cur_index].rgba[3] = 1.0f;
+				cur_index++;
 			}
-			
-			glEnd();
+
+			RGL_EndUnit(12);
 		}
 	}
-
-	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
 }
 
 bool RGL_DoWipe(void)
@@ -373,6 +424,8 @@ bool RGL_DoWipe(void)
 		return true;
 
 	float how_far = (float) cur_wipe_progress / 40.0f;
+
+	RGL_StartUnits(false);
 
 	switch (cur_wipe_effect)
 	{
@@ -412,6 +465,8 @@ bool RGL_DoWipe(void)
 			RGL_Wipe_Fading(how_far);
 			break;
 	}
+
+	RGL_FinishUnits();
 
 	return false;
 }

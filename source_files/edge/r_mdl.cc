@@ -858,10 +858,12 @@ I_Debugf("Render model: bad frame %d\n", frame1);
 				continue;
 		}
 
-		local_gl_vert_t * glvert = RGL_BeginUnit(
-			 GL_TRIANGLES, md->num_strips * 3,
+		int first_vert_index = 0;
+
+		local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, md->num_points, md->num_points,
 			 data.is_additive ? ENV_SKIP_RGB : GL_MODULATE, skin_tex,
-			 ENV_NONE, 0, pass, blending);
+			 ENV_NONE, 0, pass, blending, &first_vert_index);
 
 		for (int i = 0; i < md->num_strips; i++)
 		{
@@ -869,12 +871,14 @@ I_Debugf("Render model: bad frame %d\n", frame1);
 
 			for (int v_idx=0; v_idx < md->strips[i].count; v_idx++)
 			{
-				local_gl_vert_t *dest = glvert + (i*3) + v_idx;
+				local_gl_vert_t *dest = &local_verts[first_vert_index + (i*3) + v_idx];
 
 				ModelCoordFunc(&data, v_idx, &dest->pos, dest->rgba,
 						&dest->texc[0], &dest->normal);
 
 				dest->rgba[3] = trans;
+
+				glunit->indices[(i*3) + v_idx] = first_vert_index + (i*3) + v_idx;
 			}
 		}
 

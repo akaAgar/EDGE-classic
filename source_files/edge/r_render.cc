@@ -2861,30 +2861,29 @@ static void RGL_DrawSubList(std::list<drawsub_c *> &dsubs, bool for_mirror = fal
 
 static void DrawMirrorPolygon(drawmirror_c *mir)
 {
-	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	float alpha = 0.15 + 0.10 * num_active_mirrors;
+	float R,G,B = 0;
 
 	line_t *ld = mir->seg->linedef;
 	SYS_ASSERT(ld);
 
 	if (ld->special)
 	{
-		float R = RGB_RED(ld->special->fx_color) / 255.0;
-		float G = RGB_GRN(ld->special->fx_color) / 255.0;
-		float B = RGB_BLU(ld->special->fx_color) / 255.0;
+		R = RGB_RED(ld->special->fx_color) / 255.0;
+		G = RGB_GRN(ld->special->fx_color) / 255.0;
+		B = RGB_BLU(ld->special->fx_color) / 255.0;
 
 		// looks better with reduced color in multiple reflections
 		float reduce = 1.0f / (1 + 1.5 * num_active_mirrors);
 
 		R *= reduce; G *= reduce; B *= reduce;
-
-		glColor4f(R, G, B, alpha);
 	}
 	else
-		glColor4f(1.0, 0.0, 0.0, alpha);
+	{
+		R = 1.0;
+		G = 0.0;
+		B = 0.0;
+	}
 
 	float x1 = mir->seg->v1->x;
 	float y1 = mir->seg->v1->y;
@@ -2897,16 +2896,34 @@ static void DrawMirrorPolygon(drawmirror_c *mir)
 	MIR_Coordinate(x1, y1);
 	MIR_Coordinate(x2, y2);
 
-	glBegin(GL_POLYGON);
+	int first_vert_index = 0;
 
-	glVertex3f(x1, y1, z1);
-	glVertex3f(x1, y1, z2);
-	glVertex3f(x2, y2, z2);
-	glVertex3f(x2, y2, z1);
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, 0,
+			 ENV_NONE, 0, 0, BL_Alpha, &first_vert_index);
 
-	glEnd();
+	for (int ind = 0, v_idx = 2; v_idx < 4; v_idx++)
+	{
+		glunit->indices[ind++] = first_vert_index;
+		glunit->indices[ind++] = first_vert_index + v_idx - 1;
+		glunit->indices[ind++] = first_vert_index + v_idx;
+	}
 
-	glDisable(GL_BLEND);
+	local_verts[first_vert_index].pos = {x1, y1, z1};
+	local_verts[first_vert_index+1].pos = {x1, y1, z2};
+	local_verts[first_vert_index+2].pos = {x2, y2, z2};
+	local_verts[first_vert_index+3].pos = {x2, y2, z1};
+
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = R;
+		local_verts[first_vert_index+i].rgba[1] = G;
+		local_verts[first_vert_index+i].rgba[2] = B;
+		local_verts[first_vert_index+i].rgba[3] = alpha;
+	}
+
+	RGL_EndUnit(4);
 }
 
 static void DrawPortalPolygon(drawmirror_c *mir)
@@ -2923,15 +2940,8 @@ static void DrawPortalPolygon(drawmirror_c *mir)
 		return;
 	}
 
-	glDisable(GL_ALPHA_TEST);
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	// set texture
 	GLuint tex_id = W_ImageCache(surf->image);
-
-	glBindTexture(GL_TEXTURE_2D, tex_id);
 
 	// set colour & alpha
 	float alpha = ld->special->translucency * surf->translucency;
@@ -2939,8 +2949,6 @@ static void DrawPortalPolygon(drawmirror_c *mir)
 	float R = RGB_RED(ld->special->fx_color) / 255.0;
 	float G = RGB_GRN(ld->special->fx_color) / 255.0;
 	float B = RGB_BLU(ld->special->fx_color) / 255.0;
-
-	glColor4f(R, G, B, alpha);
 
 	// get polygon coordinates
 	float x1 = mir->seg->v1->x;
@@ -2970,17 +2978,34 @@ static void DrawPortalPolygon(drawmirror_c *mir)
 	ty1 = ty1 * surf->y_mat.y / total_h;
 	ty2 = ty2 * surf->y_mat.y / total_h;
 
-	glBegin(GL_POLYGON);
+	int first_vert_index = 0;
 
-	glTexCoord2f(tx1, ty1); glVertex3f(x1, y1, z1);
-	glTexCoord2f(tx1, ty2); glVertex3f(x1, y1, z2);
-	glTexCoord2f(tx2, ty2); glVertex3f(x2, y2, z2);
-	glTexCoord2f(tx2, ty1); glVertex3f(x2, y2, z1);
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, tex_id,
+			 ENV_NONE, 0, 0, BL_Alpha, &first_vert_index);
 
-	glEnd();
+	for (int ind = 0, v_idx = 2; v_idx < 4; v_idx++)
+	{
+		glunit->indices[ind++] = first_vert_index;
+		glunit->indices[ind++] = first_vert_index + v_idx - 1;
+		glunit->indices[ind++] = first_vert_index + v_idx;
+	}
 
-	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
+	local_verts[first_vert_index].pos = {x1, y1, z1};
+	local_verts[first_vert_index+1].pos = {x1, y1, z2};
+	local_verts[first_vert_index+2].pos = {x2, y2, z2};
+	local_verts[first_vert_index+3].pos = {x2, y2, z1};
+
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = R;
+		local_verts[first_vert_index+i].rgba[1] = G;
+		local_verts[first_vert_index+i].rgba[2] = B;
+		local_verts[first_vert_index+i].rgba[3] = alpha;
+	}
+
+	RGL_EndUnit(4);
 }
 
 static void RGL_DrawMirror(drawmirror_c *mir)
