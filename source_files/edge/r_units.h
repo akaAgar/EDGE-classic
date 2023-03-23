@@ -57,6 +57,9 @@ typedef struct local_gl_unit_s
 	// blending flags
 	int blending;
 
+	// Only used with GL_LINES
+	float line_thickness = 1.0f;
+
 	// Used as alpha target
 	float alpha_test_value = 0.0f;
 
@@ -89,15 +92,16 @@ typedef enum
 	BL_Alpha    = (1<<4),  // alpha-blend with the framebuffer
 	BL_Add      = (1<<5),  // additive-blend with the framebuffer
 	BL_Invert = (1<<6),   // invert color-blend
+	BL_SmoothLines = (1<<7), // Smooth GL_LINES
 
-	BL_CullBack = (1<<7),  // enable back-face culling
-	BL_CullFront= (1<<8),  // enable front-face culling
-	BL_NoZBuf   = (1<<9),  // don't update the Z buffer
-	BL_ClampY   = (1<<10),  // force texture to be Y clamped
-	BL_RepeatX   = (1<<11), // force texture to repeat on X axis
-	BL_RepeatY   = (1<<12), // force texture to repeat on Y axis
-	BL_Foggable   = (1<<13),  // allow fog to affect texture in multipass renders
-	BL_NoFog = (1<<14) // force disable fog for this unit regardless 
+	BL_CullBack = (1<<8),  // enable back-face culling
+	BL_CullFront= (1<<9),  // enable front-face culling
+	BL_NoZBuf   = (1<<10),  // don't update the Z buffer
+	BL_ClampY   = (1<<11),  // force texture to be Y clamped
+	BL_RepeatX   = (1<<12), // force texture to repeat on X axis
+	BL_RepeatY   = (1<<13), // force texture to repeat on Y axis
+	BL_Foggable   = (1<<14),  // allow fog to affect texture in multipass renders
+	BL_NoFog = (1<<15) // force disable fog for this unit regardless 
 }
 blending_mode_e;
 

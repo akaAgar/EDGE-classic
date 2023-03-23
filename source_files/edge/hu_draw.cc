@@ -783,26 +783,44 @@ void HUD_SolidLine(float x1, float y1, float x2, float y2, rgbcol_t col,
 	dx = COORD_X(dx) - COORD_X(0);
 	dy = COORD_Y( 0) - COORD_Y(dy);
 
-	glLineWidth(thickness);
-
-	if (smooth)
-		glEnable(GL_LINE_SMOOTH);
+	int blending = BL_NoZBuf;
 
 	if (smooth || cur_alpha < 0.99f)
-		glEnable(GL_BLEND);
+		blending |= BL_Alpha;
 
-	glColor4f(RGB_RED(col)/255.0, RGB_GRN(col)/255.0, RGB_BLU(col)/255.0, cur_alpha);
+	if (smooth)
+		blending |= BL_SmoothLines;
 
-	glBegin(GL_LINES);
+	float r = RGB_RED(col)/255.0;
+	float g = RGB_GRN(col)/255.0;
+	float b = RGB_BLU(col)/255.0;
 
-	glVertex2i((int)x1 + (int)dx, (int)y1 + (int)dy);
-	glVertex2i((int)x2 + (int)dx, (int)y2 + (int)dy);
+	RGL_StartUnits(false);
 
-	glEnd();
+	int first_vert_index = 0;
 
-	glDisable(GL_BLEND);
-	glDisable(GL_LINE_SMOOTH);
-	glLineWidth(1.0f);
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_LINES, 2, 2,
+			 GL_MODULATE, 0,
+			 ENV_NONE, 0, 0, blending, &first_vert_index);
+
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+
+	local_verts[first_vert_index].pos = {x1+dx, y1+dy, 0.0f};
+	local_verts[first_vert_index+1].pos = {x2+dx, y2+dy, 0.0f};
+
+	for (int i=0; i < 2; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = cur_alpha;
+	}
+	
+	RGL_EndUnit(2);
+
+	RGL_FinishUnits();
 }
 
 
@@ -813,32 +831,70 @@ void HUD_ThinBox(float x1, float y1, float x2, float y2, rgbcol_t col)
 	x1 = COORD_X(x1); y1 = COORD_Y(y1);
 	x2 = COORD_X(x2); y2 = COORD_Y(y2);
 
-	if (cur_alpha < 0.99f)
-		glEnable(GL_BLEND);
+	RGL_StartUnits(false);
 
-	glColor4f(RGB_RED(col)/255.0, RGB_GRN(col)/255.0, RGB_BLU(col)/255.0, cur_alpha);
+	float r = RGB_RED(col)/255.0;
+	float g = RGB_GRN(col)/255.0;
+	float b = RGB_BLU(col)/255.0;
 
-	glBegin(GL_QUADS);
-	glVertex2f(x1,   y1); glVertex2f(x1,   y2);
-	glVertex2f(x1+2, y2); glVertex2f(x1+2, y1);
-	glEnd();
+	int first_vert_index = 0;
 
-	glBegin(GL_QUADS);
-	glVertex2f(x2-2, y1); glVertex2f(x2-2, y2);
-	glVertex2f(x2,   y2); glVertex2f(x2,   y1);
-	glEnd();
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 16, 24,
+			 GL_MODULATE, 0,
+			 ENV_NONE, 0, 0, (cur_alpha < 0.99f ? BL_Alpha : BL_NONE) | BL_NoZBuf, &first_vert_index);
 
-	glBegin(GL_QUADS);
-	glVertex2f(x1+2, y1);   glVertex2f(x1+2, y1+2);
-	glVertex2f(x2-2, y1+2); glVertex2f(x2-2, y1);
-	glEnd();
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
+	glunit->indices[6] = first_vert_index + 4;
+	glunit->indices[7] = first_vert_index + 5;
+	glunit->indices[8] = first_vert_index + 6;
+	glunit->indices[9] = first_vert_index + 4;
+	glunit->indices[10] = first_vert_index + 6;
+	glunit->indices[11] = first_vert_index + 7;
+	glunit->indices[12] = first_vert_index + 8;
+	glunit->indices[13] = first_vert_index + 9;
+	glunit->indices[14] = first_vert_index + 10;
+	glunit->indices[15] = first_vert_index + 8;
+	glunit->indices[16] = first_vert_index + 10;
+	glunit->indices[17] = first_vert_index + 11;
+	glunit->indices[18] = first_vert_index + 12;
+	glunit->indices[19] = first_vert_index + 13;
+	glunit->indices[20] = first_vert_index + 14;
+	glunit->indices[21] = first_vert_index + 12;
+	glunit->indices[22] = first_vert_index + 14;
+	glunit->indices[23] = first_vert_index + 15;
+	local_verts[first_vert_index].pos = {x1, y1, 0.0f};
+	local_verts[first_vert_index+1].pos = {x1, y2, 0.0f};
+	local_verts[first_vert_index+2].pos = {x1+2, y2, 0.0f};
+	local_verts[first_vert_index+3].pos = {x1+2, y1, 0.0f};
+	local_verts[first_vert_index+4].pos = {x2-2, y1, 0.0f};
+	local_verts[first_vert_index+5].pos = {x2-2, y2, 0.0f};
+	local_verts[first_vert_index+6].pos = {x2, y2, 0.0f};
+	local_verts[first_vert_index+7].pos = {x2, y1, 0.0f};
+	local_verts[first_vert_index+8].pos = {x1+2, y1, 0.0f};
+	local_verts[first_vert_index+9].pos = {x1+2, y1+2, 0.0f};
+	local_verts[first_vert_index+10].pos = {x2-2, y1+2, 0.0f};
+	local_verts[first_vert_index+11].pos = {x2-2, y1, 0.0f};
+	local_verts[first_vert_index+12].pos = {x1+2, y2-2, 0.0f};
+	local_verts[first_vert_index+13].pos = {x1+2, y2, 0.0f};
+	local_verts[first_vert_index+14].pos = {x2-2, y2, 0.0f};
+	local_verts[first_vert_index+15].pos = {x2-2, y2-2, 0.0f};
+	for (int i=0; i < 16; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = cur_alpha;
+	}
 
-	glBegin(GL_QUADS);
-	glVertex2f(x1+2,  y2-2); glVertex2f(x1+2, y2);
-	glVertex2f(x2-2,  y2);   glVertex2f(x2-2, y2-2);
-	glEnd();
+	RGL_EndUnit(16);
 
-	glDisable(GL_BLEND);
+	RGL_FinishUnits();
 }
 
 
@@ -849,30 +905,46 @@ void HUD_GradientBox(float x1, float y1, float x2, float y2, rgbcol_t *cols)
 	x1 = COORD_X(x1); y1 = COORD_Y(y1);
 	x2 = COORD_X(x2); y2 = COORD_Y(y2);
 
-	if (cur_alpha < 0.99f)
-		glEnable(GL_BLEND);
+	RGL_StartUnits(false);
 
-	glBegin(GL_QUADS);
+	int first_vert_index = 0;
 
-	glColor4f(RGB_RED(cols[1])/255.0, RGB_GRN(cols[1])/255.0,
-	          RGB_BLU(cols[1])/255.0, cur_alpha);
-	glVertex2f(x1, y1);
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, 0,
+			 ENV_NONE, 0, 0, (cur_alpha < 0.99f ? BL_Alpha : BL_NONE) | BL_NoZBuf, &first_vert_index);
 
-	glColor4f(RGB_RED(cols[0])/255.0, RGB_GRN(cols[0])/255.0,
-	          RGB_BLU(cols[0])/255.0, cur_alpha);
-	glVertex2f(x1, y2);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
 
-	glColor4f(RGB_RED(cols[2])/255.0, RGB_GRN(cols[2])/255.0,
-	          RGB_BLU(cols[2])/255.0, cur_alpha);
-	glVertex2f(x2, y2);
+	local_verts[first_vert_index].pos = {x1, y1, 0.0f};
+	local_verts[first_vert_index+1].pos = {x1, y2, 0.0f};
+	local_verts[first_vert_index+2].pos = {x2, y2, 0.0f};
+	local_verts[first_vert_index+3].pos = {x2, y1, 0.0f};
+	local_verts[first_vert_index].rgba[0] = RGB_RED(cols[1])/255.0;
+	local_verts[first_vert_index].rgba[1] = RGB_GRN(cols[1])/255.0;
+	local_verts[first_vert_index].rgba[2] = RGB_BLU(cols[1])/255.0;
+	local_verts[first_vert_index].rgba[3] = cur_alpha;
+	local_verts[first_vert_index+1].rgba[0] = RGB_RED(cols[0])/255.0;
+	local_verts[first_vert_index+1].rgba[1] = RGB_GRN(cols[0])/255.0;
+	local_verts[first_vert_index+1].rgba[2] = RGB_BLU(cols[0])/255.0;
+	local_verts[first_vert_index+1].rgba[3] = cur_alpha;
+	local_verts[first_vert_index+2].rgba[0] = RGB_RED(cols[2])/255.0;
+	local_verts[first_vert_index+2].rgba[1] = RGB_GRN(cols[2])/255.0;
+	local_verts[first_vert_index+2].rgba[2] = RGB_BLU(cols[2])/255.0;
+	local_verts[first_vert_index+2].rgba[3] = cur_alpha;
+	local_verts[first_vert_index+3].rgba[0] = RGB_RED(cols[3])/255.0;
+	local_verts[first_vert_index+3].rgba[1] = RGB_GRN(cols[3])/255.0;
+	local_verts[first_vert_index+3].rgba[2] = RGB_BLU(cols[3])/255.0;
+	local_verts[first_vert_index+3].rgba[3] = cur_alpha;
+	RGL_EndUnit(4);
 
-	glColor4f(RGB_RED(cols[3])/255.0, RGB_GRN(cols[3])/255.0,
-	          RGB_BLU(cols[3])/255.0, cur_alpha);
-	glVertex2f(x2, y1);
+	RGL_FinishUnits();
 
-	glEnd();
-
-	glDisable(GL_BLEND);
 }
 
 

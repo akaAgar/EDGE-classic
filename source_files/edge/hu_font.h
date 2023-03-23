@@ -115,9 +115,6 @@ public:
 	int MaxFit(int pixel_w, const char *str);
 	int GetGlyphIndex(char ch);
 
-	void DrawChar320(float x, float y, char ch, float scale, float aspect,
-				     const colourmap_c *colmap, float alpha) const;
-
 	// FIXME: maybe shouldn't be public (assumes FNTYP_Patch !!)
 	const image_c *CharImage(char ch) const;
 

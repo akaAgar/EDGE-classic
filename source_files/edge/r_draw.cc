@@ -59,21 +59,20 @@ void RGL_DrawImage(float x, float y, float w, float h, const image_c *image,
 	GLuint tex_id = W_ImageCache(image, true,
 		(textmap && (textmap->special & COLSP_Whiten)) ? NULL : palremap, (textmap && (textmap->special & COLSP_Whiten)) ? true : false);
 
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, tex_id);
+	int blending = BL_NONE;
  
 	if (alpha >= 0.99f && image->opacity == OPAC_Solid)
-		glDisable(GL_ALPHA_TEST);
+	{ /* Nothing needed */ }
 	else
 	{
-		glEnable(GL_ALPHA_TEST);
+		blending |= BL_Alpha;
 
 		if (! (alpha < 0.11f || image->opacity == OPAC_Complex))
-			glAlphaFunc(GL_GREATER, alpha * 0.66f);
+			blending |= BL_Less;
 	}
 
 	if (image->opacity == OPAC_Complex || alpha < 0.99f)
-		glEnable(GL_BLEND);
+		blending |= BL_Less; // Redundant? - Dasho
 
 	if (textmap)
 	{
@@ -84,29 +83,40 @@ void RGL_DrawImage(float x, float y, float w, float h, const image_c *image,
 		b = RGB_BLU(col) / 255.0;
 	}
 
-	glColor4f(r, g, b, alpha);
+	int first_vert_index = 0;
 
-	glBegin(GL_QUADS);
+	RGL_StartUnits(false);
 
-	glTexCoord2f(tx1, ty1);
-	glVertex2i(x1, y1);
+	local_gl_unit_t * glunit = RGL_BeginUnit(
+			 GL_TRIANGLES, 4, 6,
+			 GL_MODULATE, tex_id,
+			 ENV_NONE, 0, 0, blending, &first_vert_index);
 
-	glTexCoord2f(tx2, ty1); 
-	glVertex2i(x2, y1);
+	glunit->indices[0] = first_vert_index;
+	glunit->indices[1] = first_vert_index + 1;
+	glunit->indices[2] = first_vert_index + 2;
+	glunit->indices[3] = first_vert_index;
+	glunit->indices[4] = first_vert_index + 2;
+	glunit->indices[5] = first_vert_index + 3;
 
-	glTexCoord2f(tx2, ty2);
-	glVertex2i(x2, y2);
+	local_verts[first_vert_index].texc->Set(tx1, ty1);
+	local_verts[first_vert_index].pos = {(float)x1, (float)y1, 0.0f};
+	local_verts[first_vert_index+1].texc->Set(tx2, ty1);
+	local_verts[first_vert_index+1].pos = {(float)x2, (float)y1, 0.0f};
+	local_verts[first_vert_index+2].texc->Set(tx2, ty2);
+	local_verts[first_vert_index+2].pos = {(float)x2, (float)y2, 0.0f};
+	local_verts[first_vert_index+3].texc->Set(tx1, ty2);
+	local_verts[first_vert_index+3].pos = {(float)x1, (float)y2, 0.0f};
+	for (int i=0; i < 4; i++)
+	{
+		local_verts[first_vert_index+i].rgba[0] = r;
+		local_verts[first_vert_index+i].rgba[1] = g;
+		local_verts[first_vert_index+i].rgba[2] = b;
+		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+	}
+	RGL_EndUnit(4);
 
-	glTexCoord2f(tx1, ty2);
-	glVertex2i(x1, y2);
-
-	glEnd();
-
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_BLEND);
-
-	glAlphaFunc(GL_GREATER, 0);
+	RGL_FinishUnits();
 }
 
 

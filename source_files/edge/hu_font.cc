@@ -636,33 +636,6 @@ int font_c::StringLines(const char *str) const
 	return lines;
 }
 
-
-void font_c::DrawChar320(float x, float y, char ch, float scale, float aspect,
-    const colourmap_c *colmap, float alpha) const
-{
-	SYS_ASSERT(def->type == FNTYP_Patch);
-
-	const image_c *image = CharImage(ch);
-
-	if (! image)
-		return;
-	
-	float sc_x = scale * aspect;
-	float sc_y = scale;
-
-	y = 200-y;
-
-	RGL_DrawImage(
-	    FROM_320(x - IM_OFFSETX(image) * sc_x),
-		FROM_200(y + (IM_OFFSETY(image) - IM_HEIGHT(image)) * sc_y),
-		FROM_320(IM_WIDTH(image))  * sc_x,
-		FROM_200(IM_HEIGHT(image)) * sc_y,
-		image, 0.0f, 0.0f,
-		IM_RIGHT(image), IM_TOP(image),
-		colmap, alpha);
-}
-
-
 //----------------------------------------------------------------------------
 //  font_container_c class
 //----------------------------------------------------------------------------
