@@ -481,8 +481,8 @@ void HUD_RawImage(float hx1, float hy1, float hx2, float hy2,
 		HUD_CalcScrollTexCoords(sx, sy, &tx1, &ty1, &tx2, &ty2);
 	}
 
-	if (epi::strcmp(image->name, hud_overlays.at(r_overlay.d)) == 0)
-		blending |= (BL_RepeatX | BL_RepeatY);
+	//if (epi::strcmp(image->name, hud_overlays.at(r_overlay.d)) == 0)
+		//blending |= (BL_RepeatX | BL_RepeatY);
 
 	bool hud_swirl = false;
 
@@ -494,8 +494,6 @@ void HUD_RawImage(float hx1, float hy1, float hx2, float hy2,
 
 	if (image->liquid_type == LIQ_Thick)
 		hud_thick_liquid = true;
-
-	glColor4f(r, g, b, alpha);
 
 	if (hud_swirl)
 	{
@@ -616,9 +614,6 @@ void HUD_StretchImageNoOffset(float x, float y, float w, float h, const image_c 
 	if (cur_y_align >= 0)
 		y -= h / (cur_y_align == 0 ? 2.0f : 1.0f);
 
-	//x -= IM_OFFSETX(img);
-	//y -= IM_OFFSETY(img);
-
 	float x1 = COORD_X(x);
 	float x2 = COORD_X(x+w);
 
@@ -630,7 +625,6 @@ void HUD_StretchImageNoOffset(float x, float y, float w, float h, const image_c 
 
 void HUD_DrawImageTitleWS(const image_c *title_image)
 {
-	
 	//Lobo: Widescreen titlescreen support.
 	//In the case of titlescreens we will ignore any scaling
 	//set in DDFImages and always calculate our own.

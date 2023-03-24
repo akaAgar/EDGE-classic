@@ -122,7 +122,7 @@ void RGL_StartUnits(bool sort_em)
 {
 	cur_vert = cur_unit = 0;
 
-	batch_sort = sort_em;
+	batch_sort = true;
 
 	local_unit_map.resize(MAX_L_UNIT);
 }

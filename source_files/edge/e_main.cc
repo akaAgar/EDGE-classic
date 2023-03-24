@@ -646,7 +646,9 @@ void E_Display(void)
 
 	CON_Drawer();
 
-	if (!hud_overlays.at(r_overlay.d).empty())
+	// Replace with post-processing/framebuffer stuff? - Dasho
+
+	/*if (!hud_overlays.at(r_overlay.d).empty())
 	{
 		const image_c *overlay = W_ImageLookup(hud_overlays.at(r_overlay.d).c_str(), INS_Graphic, ILF_Null);
 		if (overlay)
@@ -671,7 +673,7 @@ void E_Display(void)
 		HUD_SolidBox(hud_x_left, 0, hud_x_right, 200, RGB_MAKE(col, col, col));
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_BLEND);
-	}
+	}*/
 
 	if (m_screenshot_required)
 	{
