@@ -604,8 +604,6 @@ static void SolidBox(int x, int y, int w, int h, rgbcol_t col, float alpha)
 	float g = RGB_GRN(col)/255.0;
 	float b = RGB_BLU(col)/255.0;
 
-	RGL_StartUnits(false);
-
 	int first_vert_index = 0;
 
 	local_gl_unit_t *glunit = RGL_BeginUnit(
@@ -630,8 +628,6 @@ static void SolidBox(int x, int y, int w, int h, rgbcol_t col, float alpha)
 		local_verts[first_vert_index+i].rgba[3] = alpha;
 	}
 	RGL_EndUnit(4);
-
-	RGL_FinishUnits();
 }
 
 static void HorizontalLine(int y, rgbcol_t col)
@@ -666,8 +662,6 @@ static void DrawChar(int x, int y, char ch, rgbcol_t col)
 		else
 			tex_id = con_font->ttf_glyph_map.at(cp437_unicode_values[static_cast<u8_t>(ch)]).tex_id;
 
-		RGL_StartUnits(false);
-
 		int first_vert_index = 0;
 
 		local_gl_unit_t *glunit = RGL_BeginUnit(
@@ -696,8 +690,6 @@ static void DrawChar(int x, int y, char ch, rgbcol_t col)
 			local_verts[first_vert_index+i].rgba[3] = alpha;
 		}
 		RGL_EndUnit(4);
-
-		RGL_FinishUnits();
 		return;
 	}
 
@@ -708,8 +700,6 @@ static void DrawChar(int x, int y, char ch, rgbcol_t col)
 	float tx2 = (px+1) * con_font->font_image->ratio_w;
 	float ty1 = (py  ) * con_font->font_image->ratio_h;
 	float ty2 = (py+1) * con_font->font_image->ratio_h;
-
-	RGL_StartUnits(false);
 
 	int first_vert_index = 0;
 
@@ -742,8 +732,6 @@ static void DrawChar(int x, int y, char ch, rgbcol_t col)
 		local_verts[first_vert_index+i].rgba[3] = alpha;
 	}
 	RGL_EndUnit(4);
-
-	RGL_FinishUnits();
 }
 
 static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, bool blink, GLuint tex_id)
@@ -757,8 +745,6 @@ static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, b
 	float b = RGB_BLU(col2)/255.0f;
 
 	int first_vert_index = 0;
-
-	RGL_StartUnits(false);
 
 	local_gl_unit_t *glunit = RGL_BeginUnit(
 			GL_TRIANGLES, 4, 6,
@@ -825,8 +811,6 @@ static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, b
 		local_verts[first_vert_index+i].rgba[3] = alpha;
 	}
 	RGL_EndUnit(4);
-
-	RGL_FinishUnits();
 }
 
 // writes the text on coords (x,y) of the console
@@ -867,13 +851,6 @@ static void EndoomDrawText(int x, int y, console_line_c *endoom_line)
 	// Always whiten the font when used with console output
 	GLuint tex_id = W_ImageCache(endoom_font->font_image, true, (const colourmap_c *)0, true);
 
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, tex_id);
- 
-	glEnable(GL_BLEND);
-	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0);
-
 	for (int i=0; i < 80; i++)
 	{
 		byte info = endoom_line->endoom_bytes.at(i);
@@ -886,10 +863,6 @@ static void EndoomDrawText(int x, int y, console_line_c *endoom_line)
 		if (x >= SCREENWIDTH)
 			break;
 	}
-
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_BLEND);
 }
 
 void CON_SetupFont(void)
@@ -932,6 +905,8 @@ void CON_Drawer(void)
 
 	if (con_visible == vs_notvisible && !conwipeactive)
 		return;
+
+	RGL_StartUnits(false);
 
 	// -- background --
 
@@ -1007,6 +982,8 @@ void CON_Drawer(void)
 		if (y >= SCREENHEIGHT)
 			break;
 	}
+
+	RGL_FinishUnits();
 }
 
 
@@ -1686,6 +1663,8 @@ void CON_ShowFPS(void)
 
 	CON_SetupFont();
 
+	RGL_StartUnits(false);
+
 	// -AJA- 2022: reworked for better accuracy, ability to show WORST time
 
 	// get difference since last call
@@ -1756,6 +1735,8 @@ void CON_ShowFPS(void)
 
 		DrawText(x, y, textbuf, T_GREY176);
 	}
+
+	RGL_FinishUnits();
 }
 
 
@@ -1765,6 +1746,8 @@ void CON_ShowPosition(void)
 		return;
 
 	CON_SetupFont();
+
+	RGL_StartUnits(false);
 
 	player_t *p = players[displayplayer];
 	if (p == NULL)
@@ -1813,6 +1796,8 @@ void CON_ShowPosition(void)
 	y -= FNSZ;
 	sprintf(textbuf, "  sub: %d", (int)(p->mo->subsector - subsectors));
 	DrawText(x, y, textbuf, T_GREY176);
+
+	RGL_FinishUnits();
 }
 
 
