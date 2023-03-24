@@ -1450,8 +1450,6 @@ const image_c *W_ImageParseSaveString(char type, const char *name)
 		case 'T':
 			return W_ImageLookup(name, INS_Texture);
 	}
-
-	return NULL; /* NOT REACHED */
 }
 
 

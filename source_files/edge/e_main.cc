@@ -239,6 +239,7 @@ public:
 	{
 		I_StartFrame();
 		HUD_FrameSetup();
+		ren_red_mul = ren_grn_mul = ren_blu_mul = 1.0f;
 		if (loading_image)
 		{
 			HUD_DrawImageTitleWS(loading_image);
@@ -580,10 +581,6 @@ void E_Display(void)
 
 	HUD_FrameSetup();
 
-	// -AJA- 1999/08/02: Make sure palette/gamma is OK. This also should
-	//       fix (finally !) the "gamma too late on walls" bug.
-	V_ColourNewFrame();
-
 	switch (gamestate)
 	{
 		case GS_LEVEL:
@@ -704,6 +701,7 @@ static const image_c *title_image = NULL;
 
 static void E_TitleDrawer(void)
 {
+	ren_red_mul = ren_grn_mul = ren_blu_mul = 1.0f;
 	if (title_image)
 	{
 		HUD_DrawImageTitleWS(title_image); //Lobo: Widescreen titlescreen support

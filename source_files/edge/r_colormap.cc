@@ -533,17 +533,6 @@ rgbcol_t V_ParseFontColor(const char *name, bool strict)
 	return rgb;
 }
 
-
-//
-// Call this at the start of each frame (before any rendering or
-// render-related work has been done).  Will update the palette and/or
-// gamma settings if they have changed since the last call.
-//
-void V_ColourNewFrame(void)
-{
-	
-}
-
 //
 // Returns an RGB value from an index value - used the current
 // palette.  The byte pointer is assumed to point a 3-byte array.

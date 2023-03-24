@@ -1039,9 +1039,6 @@ void MDL_RenderModel_2D(mdl_model_c *md, const image_c *skin_img, int frame,
 	if (skin_tex == 0)
 		I_Error("MDL Frame %s missing skins?\n", md->frames[frame].name);
 
-	float im_right = (float)md->skin_width / (float)W_MakeValidSize(md->skin_width);
-	float im_top   = (float)md->skin_height / (float)W_MakeValidSize(md->skin_height);
-
 	xscale = yscale * info->model_scale * info->model_aspect;
 	yscale = yscale * info->model_scale;
 
