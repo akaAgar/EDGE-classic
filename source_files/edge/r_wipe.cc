@@ -342,29 +342,15 @@ static void RGL_Wipe_Doors(float how_far)
 
 			int ind = 0;
 
-			for (int flip = 0, v_idx = 0; v_idx + 3 < 12; v_idx += 2, flip++)
+			for (int v_idx = 0; v_idx + 2 < 12; v_idx += 2)
 			{
-				if (flip % 2 == 1)
-				{
-					glunit->indices[ind++] = first_vert_index + v_idx;
-					glunit->indices[ind++] = first_vert_index + v_idx + 1;
-					glunit->indices[ind++] = first_vert_index + v_idx + 2;
-					glunit->indices[ind++] = first_vert_index + v_idx;
-					glunit->indices[ind++] = first_vert_index + v_idx + 2;
-					glunit->indices[ind++] = first_vert_index + v_idx + 3;
-				}
-				else
-				{
-					glunit->indices[ind++] = first_vert_index + v_idx;
-					glunit->indices[ind++] = first_vert_index + v_idx + 2;
-					glunit->indices[ind++] = first_vert_index + v_idx + 3;
-					glunit->indices[ind++] = first_vert_index + v_idx;
-					glunit->indices[ind++] = first_vert_index + v_idx + 1;
-					glunit->indices[ind++] = first_vert_index + v_idx + 2;
-				}
+				glunit->indices[ind++] = first_vert_index + v_idx;
+				glunit->indices[ind++] = first_vert_index + v_idx + 1;
+				glunit->indices[ind++] = first_vert_index + v_idx + 3;
+				glunit->indices[ind++] = first_vert_index + v_idx;
+				glunit->indices[ind++] = first_vert_index + v_idx + 3;
+				glunit->indices[ind++] = first_vert_index + v_idx + 2;
 			}
-
-			I_Printf("IND: %d\n", ind);
 
 			int cur_index = 0;
 
