@@ -742,14 +742,14 @@ public:
 		}
 		else // GL_QUAD_STRIP
 		{
-			for (int ind = 0, v_idx = 0; v_idx + 3 < num_vert; v_idx += 4)
+			for (int ind = 0, v_idx = 0; v_idx + 2 < num_vert; v_idx += 2)
 			{
-				glunit->indices[ind++] = first_vert_index;
-				glunit->indices[ind++] = first_vert_index + v_idx + 1;
-				glunit->indices[ind++] = first_vert_index + v_idx + 2;
 				glunit->indices[ind++] = first_vert_index + v_idx;
-				glunit->indices[ind++] = first_vert_index + v_idx + 2;
+				glunit->indices[ind++] = first_vert_index + v_idx + 1;
 				glunit->indices[ind++] = first_vert_index + v_idx + 3;
+				glunit->indices[ind++] = first_vert_index + v_idx;
+				glunit->indices[ind++] = first_vert_index + v_idx + 3;
+				glunit->indices[ind++] = first_vert_index + v_idx + 2;
 			}
 		}
 

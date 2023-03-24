@@ -308,25 +308,21 @@ void RGL_FinishSky(void)
 
 	// draw sky picture, but DON'T affect the depth buffering
 
-	if (! r_dumbsky.d)
-		glDepthFunc(GL_GREATER);
+	glDepthMask(GL_FALSE);
 
 	if (r_culling.d)
 		glDisable(GL_DEPTH_TEST);
 
 	if (level_flags.mlook || custom_sky_box)
 	{
+		if (! r_dumbsky.d)
+			glDepthFunc(GL_GREATER);
+
 		RGL_DrawSkyBox();
 	}
 	else
 	{
-		glEnable(GL_TEXTURE_2D);
-
-		glDepthMask(GL_FALSE);
-
 		RGL_DrawSkyOriginal();
-
-		glDisable(GL_TEXTURE_2D);
 	}
 
 	if (r_culling.d)
@@ -334,12 +330,6 @@ void RGL_FinishSky(void)
 
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
-
-#if 0
-	// clear buffer (EXPERIMENTAL) -- causes render problems: ceilings
-	// you shouldn't be able to see (MAP05, MAP12).
-	glClear(GL_DEPTH_BUFFER_BIT);
-#endif
 }
 
 
@@ -569,26 +559,7 @@ void RGL_DrawSkyOriginal(void)
 {
 	RGL_SetupSkyMatrices2D();
 
-	float white[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-	if (r_colormaterial.d || ! r_colorlighting.d)
-		glColor4fv(white);
-	else
-	{
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, white);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, white);
-	}
-
 	GLuint tex_id = W_ImageCache(sky_image, false, ren_fx_colmap);
-
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, tex_id);
- 	#ifdef APPLE_SILICON
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	#endif
-
-	glBegin(GL_QUAD_STRIP);
 
 	// FIXME for widescreen
 	float FIELDOFVIEW = CLAMP(5, r_fov.f, 175);
@@ -598,6 +569,28 @@ void RGL_DrawSkyOriginal(void)
 
 	float ty1 = 200.0f / 128.0f;
 	float ty2 = 0;
+
+	RGL_StartUnits(false);
+
+	int first_vert_index = 0;
+
+	local_gl_unit_t * glunit = RGL_BeginUnit(GL_TRIANGLES, 66,
+			192, GL_MODULATE, tex_id, GL_MODULATE,
+			0, 0, BL_NoZBuf, &first_vert_index);
+
+	int ind = 0;
+
+	for (int v_idx = 0; v_idx + 2 < 66; v_idx += 2)
+	{
+		glunit->indices[ind++] = first_vert_index + v_idx;
+		glunit->indices[ind++] = first_vert_index + v_idx + 1;
+		glunit->indices[ind++] = first_vert_index + v_idx + 3;
+		glunit->indices[ind++] = first_vert_index + v_idx;
+		glunit->indices[ind++] = first_vert_index + v_idx + 3;
+		glunit->indices[ind++] = first_vert_index + v_idx + 2;
+	}
+
+	ind = 0;
 
 	for (int i = 0; i <= 32; i++)
 	{
@@ -614,19 +607,25 @@ void RGL_DrawSkyOriginal(void)
 		else
 			tx = tx / 1024.0f;
 
-#if 0  // DEBUGGING
-I_Printf("[%i] --> %1.2f  tx %1.4f\n", i, ANG_2_FLOAT(ang), tx);
-#endif
-		glTexCoord2f(tx, 1.0f - ty1);
-		glVertex2i(sx, 0);
-
-		glTexCoord2f(tx, 1.0f - ty2); 
-		glVertex2i(sx, SCREENHEIGHT);
+		local_verts[first_vert_index+ind].texc->Set(tx, 1.0f - ty1);
+		local_verts[first_vert_index+ind].pos = {(float)sx, 0.0f};
+		local_verts[first_vert_index+ind].rgba[0] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[1] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[2] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+		ind++;
+		local_verts[first_vert_index+ind].texc->Set(tx, 1.0f - ty2);
+		local_verts[first_vert_index+ind].pos = {(float)sx, (float)SCREENHEIGHT};
+		local_verts[first_vert_index+ind].rgba[0] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[1] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[2] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+		ind++;
  	}
 
-	glEnd();
+	RGL_EndUnit(66);
 
-	glDisable(GL_TEXTURE_2D);
+	RGL_FinishUnits();
 
 	RGL_RevertSkyMatrices();
 }

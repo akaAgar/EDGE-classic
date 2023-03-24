@@ -247,13 +247,25 @@ static void RGL_Wipe_Pixelfade(float how_far)
 
 static void RGL_Wipe_Melt(void)
 {
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
+	int first_vert_index = 0;
 
-	glBindTexture(GL_TEXTURE_2D, cur_wipe_tex);
-	glColor3f(1.0f, 1.0f, 1.0f);
+	local_gl_unit_t * glunit = RGL_BeginUnit(GL_TRIANGLES, 258,
+			768, GL_MODULATE, cur_wipe_tex, GL_MODULATE,
+			0, 0, BL_Alpha | BL_NoZBuf, &first_vert_index);
 
-	glBegin(GL_QUAD_STRIP);
+	int ind = 0;
+
+	for (int v_idx = 0; v_idx + 2 < 258; v_idx += 2)
+	{
+		glunit->indices[ind++] = first_vert_index + v_idx;
+		glunit->indices[ind++] = first_vert_index + v_idx + 1;
+		glunit->indices[ind++] = first_vert_index + v_idx + 3;
+		glunit->indices[ind++] = first_vert_index + v_idx;
+		glunit->indices[ind++] = first_vert_index + v_idx + 3;
+		glunit->indices[ind++] = first_vert_index + v_idx + 2;
+	}
+
+	ind = 0;
 
 	for (int x=0; x <= MELT_DIVS; x++)
 	{
@@ -264,17 +276,23 @@ static void RGL_Wipe_Melt(void)
 
 		float tx = cur_wipe_right * (float) x / MELT_DIVS;
 
-		glTexCoord2f(tx, cur_wipe_top);
-		glVertex2f(sx, sy);
-
-		glTexCoord2f(tx, 0.0f);
-		glVertex2f(sx, sy - SCREENHEIGHT);
+		local_verts[first_vert_index+ind].texc->Set(tx, cur_wipe_top);
+		local_verts[first_vert_index+ind].pos = {sx, sy};
+		local_verts[first_vert_index+ind].rgba[0] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[1] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[2] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+		ind++;
+		local_verts[first_vert_index+ind].texc->Set(tx, 0.0f);
+		local_verts[first_vert_index+ind].pos = {sx, sy - SCREENHEIGHT};
+		local_verts[first_vert_index+ind].rgba[0] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[1] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[2] = 1.0f;
+		local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+		ind++;
 	}
 
-	glEnd();
-
-	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
+	RGL_EndUnit(258);
 }
 
 static void RGL_Wipe_Slide(float how_far, float dx, float dy)
@@ -352,7 +370,7 @@ static void RGL_Wipe_Doors(float how_far)
 				glunit->indices[ind++] = first_vert_index + v_idx + 2;
 			}
 
-			int cur_index = 0;
+			ind = 0;
 
 			for (int row = 0; row <= 5; row++)
 			{
@@ -361,20 +379,20 @@ static void RGL_Wipe_Doors(float how_far)
 				float j1 = (SCREENHEIGHT - v_y1 * 2.0f) / 5.0f;
 				float j2 = (SCREENHEIGHT - v_y2 * 2.0f) / 5.0f;
 
-				local_verts[first_vert_index+cur_index].texc->Set(t_x2 * cur_wipe_right, t_y);
-				local_verts[first_vert_index+cur_index].pos = {v_x2, v_y2 + j2 * row};
-				local_verts[first_vert_index+cur_index].rgba[0] = 1.0f;
-				local_verts[first_vert_index+cur_index].rgba[1] = 1.0f;
-				local_verts[first_vert_index+cur_index].rgba[2] = 1.0f;
-				local_verts[first_vert_index+cur_index].rgba[3] = 1.0f;
-				cur_index++;
-				local_verts[first_vert_index+cur_index].texc->Set(t_x1 * cur_wipe_right, t_y);
-				local_verts[first_vert_index+cur_index].pos = {v_x1, v_y1 + j1 * row};
-				local_verts[first_vert_index+cur_index].rgba[0] = 1.0f;
-				local_verts[first_vert_index+cur_index].rgba[1] = 1.0f;
-				local_verts[first_vert_index+cur_index].rgba[2] = 1.0f;
-				local_verts[first_vert_index+cur_index].rgba[3] = 1.0f;
-				cur_index++;
+				local_verts[first_vert_index+ind].texc->Set(t_x2 * cur_wipe_right, t_y);
+				local_verts[first_vert_index+ind].pos = {v_x2, v_y2 + j2 * row};
+				local_verts[first_vert_index+ind].rgba[0] = 1.0f;
+				local_verts[first_vert_index+ind].rgba[1] = 1.0f;
+				local_verts[first_vert_index+ind].rgba[2] = 1.0f;
+				local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+				ind++;
+				local_verts[first_vert_index+ind].texc->Set(t_x1 * cur_wipe_right, t_y);
+				local_verts[first_vert_index+ind].pos = {v_x1, v_y1 + j1 * row};
+				local_verts[first_vert_index+ind].rgba[0] = 1.0f;
+				local_verts[first_vert_index+ind].rgba[1] = 1.0f;
+				local_verts[first_vert_index+ind].rgba[2] = 1.0f;
+				local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+				ind++;
 			}
 
 			RGL_EndUnit(12);
