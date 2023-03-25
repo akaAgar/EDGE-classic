@@ -64,8 +64,9 @@ typedef struct local_gl_unit_s
 	float alpha_test_value = 0.0f;
 
 	// vertex information
-	int v_count;
-	int i_count;
+	GLushort v_count;
+	GLushort i_count;
+	GLushort i_start;
 	std::vector<GLushort> indices;
 }
 local_gl_unit_t;

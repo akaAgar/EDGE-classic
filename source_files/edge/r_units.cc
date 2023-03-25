@@ -68,8 +68,11 @@ static local_gl_unit_t local_units[MAX_L_UNIT];
 
 static std::vector<local_gl_unit_t *> local_unit_map;
 
-static int cur_vert;
-static int cur_unit;
+static GLushort cur_vert;
+static GLushort cur_unit;
+static GLushort cur_index;
+static GLuint unit_vbo_id = 0;
+static GLuint unit_ibo_id = 0;
 
 static bool batch_sort;
 
@@ -82,6 +85,14 @@ GLfloat cull_fog_color[4];
 //
 void RGL_InitUnits(void)
 {
+	glGenBuffers(1, &unit_vbo_id);
+	glGenBuffers(1, &unit_ibo_id);
+	if (unit_vbo_id == 0 || unit_ibo_id == 0)
+		I_Error("RGL_InitUnits: Failed to create buffer!\n");
+	glBindBuffer(GL_ARRAY_BUFFER, unit_vbo_id);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(local_gl_vert_t) * MAX_L_VERT, NULL, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, unit_ibo_id);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort) * MAX_L_VERT, NULL, GL_DYNAMIC_DRAW);
 	// Run the soft init code
 	RGL_SoftInitUnits();
 }
@@ -94,18 +105,18 @@ void RGL_InitUnits(void)
 void RGL_SoftInitUnits()
 {
 	// setup pointers to client state
-	glVertexPointer(3, GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].pos.x);
-	glColorPointer (4, GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].rgba);
-	glNormalPointer(GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].normal.x);
+	glVertexPointer(3, GL_FLOAT, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, pos.x)));
+	glColorPointer (4, GL_FLOAT, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, rgba)));
+	glNormalPointer(GL_FLOAT, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, normal.x)));
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glClientActiveTexture(GL_TEXTURE0);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].texc[0]);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, texc[0])));
 	glClientActiveTexture(GL_TEXTURE1);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(local_gl_vert_t), &local_verts[0].texc[1]);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, texc[1])));
 }
 
 
@@ -120,7 +131,7 @@ void RGL_SoftInitUnits()
 //
 void RGL_StartUnits(bool sort_em)
 {
-	cur_vert = cur_unit = 0;
+	cur_vert = cur_unit = cur_index = 0;
 
 	batch_sort = true;
 
@@ -203,6 +214,8 @@ void RGL_EndUnit(int actual_vert)
 
 	unit->v_count = actual_vert;
 
+	unit->i_start = cur_index;
+
 	// adjust colors (for special effects)
 	for (int i = 0; i < actual_vert; i++)
 	{
@@ -213,7 +226,11 @@ void RGL_EndUnit(int actual_vert)
 		v->rgba[2] *= ren_blu_mul;
 	}
 
+	glBufferSubData(GL_ARRAY_BUFFER, GLintptr(cur_vert * sizeof(local_gl_vert_t)), actual_vert * sizeof(local_gl_vert_t), &local_verts[cur_vert]);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, GLintptr(cur_index * sizeof(GLushort)), unit->i_count * sizeof(GLushort), unit->indices.data());
+
 	cur_vert += actual_vert;
+	cur_index += unit->i_count;
 	cur_unit++;
 
 	SYS_ASSERT(cur_vert <= MAX_L_VERT);
@@ -559,7 +576,7 @@ void RGL_DrawUnits(void)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		}
 
-		glDrawElements(unit->shape, unit->i_count, GL_UNSIGNED_SHORT, unit->indices.data());
+		glDrawElements(unit->shape, unit->i_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(unit->i_start * sizeof(GLushort)));
 		
 		// restore the clamping modes
 		if (old_xclamp != DUMMY_CLAMP)
@@ -573,7 +590,7 @@ void RGL_DrawUnits(void)
 	}
 
 	// all done
-	cur_vert = cur_unit = 0;
+	cur_vert = cur_unit = cur_index = 0;
 
 	glPolygonOffset(0, 0);
 

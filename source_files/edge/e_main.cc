@@ -255,7 +255,7 @@ public:
 			y += 10;
 		}
 
-		if (!hud_overlays.at(r_overlay.d).empty())
+		/*if (!hud_overlays.at(r_overlay.d).empty())
 		{
 			const image_c *overlay = W_ImageLookup(hud_overlays.at(r_overlay.d).c_str(), INS_Graphic, ILF_Null);
 			if (overlay)
@@ -263,24 +263,24 @@ public:
 					SCREENHEIGHT / IM_HEIGHT(overlay));
 		}
 
-	if (v_gamma.d < 10)
-	{
-		int col = (1.0f - (0.1f * (10 - v_gamma.d))) * 255;
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-		HUD_SolidBox(hud_x_left, 0, hud_x_right, 200, RGB_MAKE(col, col, col));
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_BLEND);
-	}
-	else if (v_gamma.d > 10)
-	{
-		int col = (0.1f * -(10 - v_gamma.d)) * 255;
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_DST_COLOR, GL_ONE);
-		HUD_SolidBox(hud_x_left, 0, hud_x_right, 200, RGB_MAKE(col, col, col));
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_BLEND);
-	}
+		if (v_gamma.d < 10)
+		{
+			int col = (1.0f - (0.1f * (10 - v_gamma.d))) * 255;
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+			HUD_SolidBox(hud_x_left, 0, hud_x_right, 200, RGB_MAKE(col, col, col));
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDisable(GL_BLEND);
+		}
+		else if (v_gamma.d > 10)
+		{
+			int col = (0.1f * -(10 - v_gamma.d)) * 255;
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_DST_COLOR, GL_ONE);
+			HUD_SolidBox(hud_x_left, 0, hud_x_right, 200, RGB_MAKE(col, col, col));
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDisable(GL_BLEND);
+		}*/
 
 		I_FinishFrame();
 	}
