@@ -27,7 +27,7 @@
 #define __R_UNITS_H__
 
 #define MAX_PLVERT  64
-#define MAX_L_VERT  65535
+#define MAX_L_VERT  64000
 
 // a single vertex to pass to the GL 
 typedef struct local_gl_vert_s

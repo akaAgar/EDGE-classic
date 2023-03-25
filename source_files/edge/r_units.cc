@@ -54,7 +54,7 @@ DEF_CVAR(r_dumbcombine,   "0", 0)
 DEF_CVAR(r_dumbclamp,     DUMB_CLAMP, 0)
 
 
-#define MAX_L_UNIT  2000
+#define MAX_L_UNIT  1000
 
 #define DUMMY_CLAMP  789
 
