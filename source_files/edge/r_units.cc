@@ -74,6 +74,11 @@ static GLushort cur_index;
 static GLuint unit_vbo_id = 0;
 static GLuint unit_ibo_id = 0;
 
+static GLuint active_tex[2] = { 0, 0 };
+static GLuint active_env[2] = { 0, 0 };
+
+static int active_pass = 0;
+static int active_blending = 0;
 static bool batch_sort;
 
 GLfloat cull_fog_color[4];
@@ -296,12 +301,6 @@ void RGL_DrawUnits(void)
 	if (cur_unit == 0)
 		return;
 
-	GLuint active_tex[2] = { 0, 0 };
-	GLuint active_env[2] = { 0, 0 };
-
-	int active_pass = 0;
-	int active_blending = 0;
-
 	for (int i=0; i < cur_unit; i++)
 		local_unit_map[i] = & local_units[i];
 
@@ -313,13 +312,13 @@ void RGL_DrawUnits(void)
 	}
 
 
-	glDisable(GL_TEXTURE_2D);
+	/*glDisable(GL_TEXTURE_2D);
 	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 
 	glAlphaFunc(GL_GREATER, 0);
 
-	glPolygonOffset(0, 0);
+	glPolygonOffset(0, 0);*/
 
 	if (r_fogofwar.d || r_culling.d)
 	{
@@ -467,10 +466,7 @@ void RGL_DrawUnits(void)
 				glDisable(GL_CULL_FACE);
 		}
 
-		if ((active_blending ^ unit->blending) & BL_NoZBuf)
-		{
-			glDepthMask((unit->blending & BL_NoZBuf) ? GL_FALSE : GL_TRUE);
-		}
+		glDepthMask((unit->blending & BL_NoZBuf) ? GL_FALSE : GL_TRUE);
 
 		active_blending = unit->blending;
 
@@ -592,7 +588,7 @@ void RGL_DrawUnits(void)
 	// all done
 	cur_vert = cur_unit = cur_index = 0;
 
-	glPolygonOffset(0, 0);
+	/*glPolygonOffset(0, 0);
 
 	for (int t=1; t >=0; t--)
 	{
@@ -608,10 +604,10 @@ void RGL_DrawUnits(void)
 	}
 
 	if (r_fogofwar.d || r_culling.d)
-		glDisable(GL_FOG);
+		glDisable(GL_FOG);*/
 
 	glDepthMask(GL_TRUE);
-	glCullFace(GL_BACK);
+	/*glCullFace(GL_BACK);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glAlphaFunc(GL_GREATER, 0);
@@ -619,7 +615,7 @@ void RGL_DrawUnits(void)
 	glDisable(GL_LINE_SMOOTH);
 	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);*/
 }
 
 
