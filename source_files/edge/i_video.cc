@@ -264,8 +264,6 @@ static bool I_CreateWindow(scrmode_c *mode)
 	if (mode->display_mode == mode->SCR_BORDERLESS)
 	{
 		SDL_GetWindowSize(my_vis, &borderless_mode.width, &borderless_mode.height);
-		//-- display_W = borderless_mode.width;
-		//-- display_H = borderless_mode.height;
 	}
 
 	if (SDL_GL_CreateContext(my_vis) == NULL)
@@ -311,8 +309,6 @@ bool I_SetScreenSize(scrmode_c *mode)
 	{
 		SDL_SetWindowFullscreen(my_vis, SDL_WINDOW_FULLSCREEN_DESKTOP);
 		SDL_GetWindowSize(my_vis, &borderless_mode.width, &borderless_mode.height);
-		//-- display_W = borderless_mode.width;
-		//-- display_H = borderless_mode.height;
 
 		I_Printf("I_SetScreenSize: mode now %dx%d %dbpp\n",
 			mode->width, mode->height, mode->depth);
@@ -345,12 +341,6 @@ bool I_SetScreenSize(scrmode_c *mode)
 	//       Plus, the combination of no-cursor + grab gives 
 	//       continuous relative mouse motion.
 	I_GrabCursor(true);
-
-#ifdef DEVELOPERS
-	// override SDL signal handlers (the so-called "parachute").
-	signal(SIGFPE,SIG_DFL);
-	signal(SIGSEGV,SIG_DFL);
-#endif
 
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

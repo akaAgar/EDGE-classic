@@ -99,8 +99,7 @@ typedef enum
 	BL_ClampY      = (1<<11), // force texture to be Y clamped
 	BL_RepeatX     = (1<<12), // force texture to repeat on X axis
 	BL_RepeatY     = (1<<13), // force texture to repeat on Y axis
-	BL_Foggable    = (1<<14), // allow fog to affect texture in multipass renders
-	BL_NoFog       = (1<<15)  // force disable fog for this unit regardless 
+	BL_NoFog       = (1<<14)  // force disable fog for this unit
 }
 blending_mode_e;
 

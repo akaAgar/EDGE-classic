@@ -1433,8 +1433,6 @@ void RGL_DrawThing(drawfloor_t *dfloor, drawthing_t *dthing)
 				continue;
 		}
 
-		blending |= BL_Foggable;
-
 		GLuint fuzz_tex = is_fuzzy ? W_ImageCache(fuzz_image, false) : 0;
 
 		int first_vert_index = 0;

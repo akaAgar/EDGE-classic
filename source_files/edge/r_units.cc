@@ -405,6 +405,8 @@ void RGL_DrawUnits(void)
 		}
 		glEnable(GL_FOG);
 	}
+	else
+		glDisable(GL_FOG);
 
 	for (int j=0; j < cur_unit; j++)
 	{
@@ -502,11 +504,10 @@ void RGL_DrawUnits(void)
 				glActiveTexture(GL_TEXTURE0 + t);
 			}
 
-			if (unit->pass > 0)
+			if (r_fogofwar.d || r_culling.d)
 			{ 
-				if (r_fogofwar.d || r_culling.d)
+				if (unit->pass > 0)
 				{
-					if ((unit->blending & BL_Foggable) != BL_Foggable)
 					glDisable(GL_FOG);
 				}
 			}
@@ -601,10 +602,10 @@ void RGL_DrawUnits(void)
 		}
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 		glDisable(GL_TEXTURE_2D);
-	}
+	}*/
 
-	if (r_fogofwar.d || r_culling.d)
-		glDisable(GL_FOG);*/
+	//if (r_fogofwar.d || r_culling.d)
+		//glDisable(GL_FOG);
 
 	glDepthMask(GL_TRUE);
 	/*glCullFace(GL_BACK);
