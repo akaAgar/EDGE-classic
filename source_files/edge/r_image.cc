@@ -99,7 +99,7 @@ typedef struct cached_image_s
 	const colourmap_c *trans_map;
 
 	// general hue of image (skewed towards pure colors)
-	rgbcol_t hue;
+	epi::color_c hue;
 
 	// texture identifier within GL
 	GLuint tex_id;
@@ -297,19 +297,19 @@ static image_c *NewImage(int width, int height, int opacity = OPAC_Unknown)
 }
 
 
-static image_c *CreateDummyImage(const char *name, rgbcol_t fg, rgbcol_t bg)
+static image_c *CreateDummyImage(const char *name, epi::color_c fg, epi::color_c bg)
 {
 	image_c *rim;
   
-	rim = NewImage(DUMMY_X, DUMMY_Y, (bg == TRANS_PIXEL) ? OPAC_Masked : OPAC_Solid);
+	rim = NewImage(DUMMY_X, DUMMY_Y, (bg.GetPacked() == TRANS_PIXEL) ? OPAC_Masked : OPAC_Solid);
  
  	strcpy(rim->name, name);
 
 	rim->source_type = IMSRC_Dummy;
 	rim->source_palette = -1;
 
-	rim->source.dummy.fg = fg;
-	rim->source.dummy.bg = bg;
+	rim->source.dummy.fg = fg.GetPacked();
+	rim->source.dummy.bg = bg.GetPacked();
 
 	return rim;
 }
@@ -1562,7 +1562,7 @@ static cached_image_t *ImageCacheOGL(image_c *rim,
 
 		rc->parent = rim;
 		rc->trans_map = trans;
-		rc->hue = RGB_NO_VALUE;
+		rc->hue = epi::color_c::NoValue();
 		rc->tex_id = 0;
 		rc->is_whitened = do_whiten ? true : false;
 

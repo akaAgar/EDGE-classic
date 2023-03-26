@@ -2528,9 +2528,9 @@ void mobjtype_c::DLightCompatibility(void)
 {
 	for (int DL = 0; DL < 2; DL++)
 	{
-		int r = RGB_RED(dlight[DL].colour);
-		int g = RGB_GRN(dlight[DL].colour);
-		int b = RGB_BLU(dlight[DL].colour);
+		int r = dlight[DL].colour.r;
+		int g = dlight[DL].colour.g;
+		int b = dlight[DL].colour.b;
 
 		// dim the colour
 		r = int(r * DLIT_COMPAT_ITY);
@@ -2542,7 +2542,7 @@ void mobjtype_c::DLightCompatibility(void)
 			case DLITE_Compat_QUAD:
 				dlight[DL].type = DLITE_Modulate;
 				dlight[DL].radius = DLIT_COMPAT_RAD(dlight[DL].radius);
-				dlight[DL].colour = RGB_MAKE(r, g, b);
+				dlight[DL].colour = epi::color_c(r, g, b);
 
 				hyperflags |= HF_QUADRATIC_COMPAT;
 				break;
@@ -2550,7 +2550,7 @@ void mobjtype_c::DLightCompatibility(void)
 			case DLITE_Compat_LIN:
 				dlight[DL].type = DLITE_Modulate;
 				dlight[DL].radius *= 1.3;
-				dlight[DL].colour = RGB_MAKE(r, g, b);
+				dlight[DL].colour = epi::color_c(r, g, b);
 				break;
 
 			default: // nothing to do

@@ -68,7 +68,7 @@ float hud_y_bottom;
 
 // current state
 static font_c  *cur_font;
-static rgbcol_t cur_color;
+static epi::color_c cur_color;
 
 static float cur_scale, cur_alpha;
 static int cur_x_align, cur_y_align;
@@ -176,7 +176,7 @@ void HUD_SetScale(float scale)
 	cur_scale = scale;
 }
 
-void HUD_SetTextColor(rgbcol_t color)
+void HUD_SetTextColor(epi::color_c color)
 {
 	cur_color = color;
 }
@@ -203,7 +203,7 @@ void HUD_Reset()
 	HUD_SetCoordSys(320, 200);
 
 	cur_font  = default_font;
-	cur_color = RGB_NO_VALUE;
+	cur_color = epi::color_c::NoValue();
 	cur_scale = 1.0f;
 	cur_alpha = 1.0f;
 	cur_x_align = -1;
@@ -390,7 +390,7 @@ void HUD_CalcTurbulentTexCoords( float *tx, float *ty, float x, float y )
 void HUD_RawImage(float hx1, float hy1, float hx2, float hy2,
                   const image_c *image, 
 				  float tx1, float ty1, float tx2, float ty2,
-				  float alpha, rgbcol_t text_col,
+				  float alpha, epi::color_c text_col,
 				  const colourmap_c *palremap, float sx, float sy, char ch)
 {
 	int x1 = I_ROUND(hx1);
@@ -409,11 +409,11 @@ void HUD_RawImage(float hx1, float hy1, float hx2, float hy2,
 
 	bool do_whiten = false;
 
-	if (text_col != RGB_NO_VALUE)
+	if (text_col != epi::color_c::NoValue())
 	{
-		r = RGB_RED(text_col) / 255.0;
-		g = RGB_GRN(text_col) / 255.0;
-		b = RGB_BLU(text_col) / 255.0;
+		r = text_col.r / 255.0;
+		g = text_col.g / 255.0;
+		b = text_col.b / 255.0;
 		do_whiten = true;
 	}
 
@@ -596,7 +596,7 @@ void HUD_StretchImage(float x, float y, float w, float h, const image_c *img, fl
 	float y1 = COORD_Y(y+h);
 	float y2 = COORD_Y(y);
 
-	rgbcol_t text_col = RGB_NO_VALUE;
+	epi::color_c text_col = epi::color_c::NoValue();
 
 	if (colmap)
 	{
@@ -620,7 +620,7 @@ void HUD_StretchImageNoOffset(float x, float y, float w, float h, const image_c 
 	float y1 = COORD_Y(y+h);
 	float y2 = COORD_Y(y);
 
-    HUD_RawImage(x1, y1, x2, y2, img, 0, 0, IM_RIGHT(img), IM_TOP(img), cur_alpha, RGB_NO_VALUE, NULL, sx, sy);
+    HUD_RawImage(x1, y1, x2, y2, img, 0, 0, IM_RIGHT(img), IM_TOP(img), cur_alpha, epi::color_c::NoValue(), NULL, sx, sy);
 }
 
 void HUD_DrawImageTitleWS(const image_c *title_image)
@@ -712,7 +712,7 @@ void HUD_TileImage(float x, float y, float w, float h, const image_c *img,
 }
 
 
-void HUD_SolidBox(float x1, float y1, float x2, float y2, rgbcol_t col)
+void HUD_SolidBox(float x1, float y1, float x2, float y2, epi::color_c col)
 {
 	// expand to cover wide screens
 	if (x1 < hud_x_left && x2 > hud_x_right-1 && y1 < hud_y_top+1 && y2 > hud_y_bottom-1)
@@ -728,9 +728,9 @@ void HUD_SolidBox(float x1, float y1, float x2, float y2, rgbcol_t col)
 		x2 = COORD_X(x2); y2 = COORD_Y(y2);
 	}
 
- 	float R = RGB_RED(col)/255.0;
-	float G = RGB_GRN(col)/255.0;
-	float B = RGB_BLU(col)/255.0;
+ 	float R = col.r/255.0;
+	float G = col.g/255.0;
+	float B = col.b/255.0;
 
 	int first_vert_index = 0;
 
@@ -768,7 +768,7 @@ void HUD_SolidBox(float x1, float y1, float x2, float y2, rgbcol_t col)
 }
 
 
-void HUD_SolidLine(float x1, float y1, float x2, float y2, rgbcol_t col,
+void HUD_SolidLine(float x1, float y1, float x2, float y2, epi::color_c col,
                    float thickness, bool smooth, float dx, float dy)
 {
 	x1 = COORD_X(x1); y1 = COORD_Y(y1);
@@ -785,9 +785,9 @@ void HUD_SolidLine(float x1, float y1, float x2, float y2, rgbcol_t col,
 	if (smooth)
 		blending |= BL_SmoothLines;
 
-	float r = RGB_RED(col)/255.0;
-	float g = RGB_GRN(col)/255.0;
-	float b = RGB_BLU(col)/255.0;
+	float r = col.r/255.0;
+	float g = col.g/255.0;
+	float b = col.b/255.0;
 
 	RGL_StartUnits(false);
 
@@ -818,7 +818,7 @@ void HUD_SolidLine(float x1, float y1, float x2, float y2, rgbcol_t col,
 }
 
 
-void HUD_ThinBox(float x1, float y1, float x2, float y2, rgbcol_t col)
+void HUD_ThinBox(float x1, float y1, float x2, float y2, epi::color_c col)
 {
 	std::swap(y1, y2);
 
@@ -827,9 +827,9 @@ void HUD_ThinBox(float x1, float y1, float x2, float y2, rgbcol_t col)
 
 	RGL_StartUnits(false);
 
-	float r = RGB_RED(col)/255.0;
-	float g = RGB_GRN(col)/255.0;
-	float b = RGB_BLU(col)/255.0;
+	float r = col.r/255.0;
+	float g = col.g/255.0;
+	float b = col.b/255.0;
 
 	int first_vert_index = 0;
 
@@ -892,7 +892,7 @@ void HUD_ThinBox(float x1, float y1, float x2, float y2, rgbcol_t col)
 }
 
 
-void HUD_GradientBox(float x1, float y1, float x2, float y2, rgbcol_t *cols)
+void HUD_GradientBox(float x1, float y1, float x2, float y2, epi::color_c *cols)
 {
 	std::swap(y1, y2);
 
@@ -919,21 +919,21 @@ void HUD_GradientBox(float x1, float y1, float x2, float y2, rgbcol_t *cols)
 	local_verts[first_vert_index+1].pos = {x1, y2, 0.0f};
 	local_verts[first_vert_index+2].pos = {x2, y2, 0.0f};
 	local_verts[first_vert_index+3].pos = {x2, y1, 0.0f};
-	local_verts[first_vert_index].rgba[0] = RGB_RED(cols[1])/255.0;
-	local_verts[first_vert_index].rgba[1] = RGB_GRN(cols[1])/255.0;
-	local_verts[first_vert_index].rgba[2] = RGB_BLU(cols[1])/255.0;
+	local_verts[first_vert_index].rgba[0] = cols[1].r/255.0;
+	local_verts[first_vert_index].rgba[1] = cols[1].g/255.0;
+	local_verts[first_vert_index].rgba[2] = cols[1].b/255.0;
 	local_verts[first_vert_index].rgba[3] = cur_alpha;
-	local_verts[first_vert_index+1].rgba[0] = RGB_RED(cols[0])/255.0;
-	local_verts[first_vert_index+1].rgba[1] = RGB_GRN(cols[0])/255.0;
-	local_verts[first_vert_index+1].rgba[2] = RGB_BLU(cols[0])/255.0;
+	local_verts[first_vert_index+1].rgba[0] = cols[0].r/255.0;
+	local_verts[first_vert_index+1].rgba[1] = cols[0].g/255.0;
+	local_verts[first_vert_index+1].rgba[2] = cols[0].b/255.0;
 	local_verts[first_vert_index+1].rgba[3] = cur_alpha;
-	local_verts[first_vert_index+2].rgba[0] = RGB_RED(cols[2])/255.0;
-	local_verts[first_vert_index+2].rgba[1] = RGB_GRN(cols[2])/255.0;
-	local_verts[first_vert_index+2].rgba[2] = RGB_BLU(cols[2])/255.0;
+	local_verts[first_vert_index+2].rgba[0] = cols[2].r/255.0;
+	local_verts[first_vert_index+2].rgba[1] = cols[2].g/255.0;
+	local_verts[first_vert_index+2].rgba[2] = cols[2].b/255.0;
 	local_verts[first_vert_index+2].rgba[3] = cur_alpha;
-	local_verts[first_vert_index+3].rgba[0] = RGB_RED(cols[3])/255.0;
-	local_verts[first_vert_index+3].rgba[1] = RGB_GRN(cols[3])/255.0;
-	local_verts[first_vert_index+3].rgba[2] = RGB_BLU(cols[3])/255.0;
+	local_verts[first_vert_index+3].rgba[0] = cols[3].r/255.0;
+	local_verts[first_vert_index+3].rgba[1] = cols[3].g/255.0;
+	local_verts[first_vert_index+3].rgba[2] = cols[3].b/255.0;
 	local_verts[first_vert_index+3].rgba[3] = cur_alpha;
 	RGL_EndUnit(4);
 
@@ -1021,7 +1021,7 @@ void HUD_DrawChar(float left_x, float top_y, const image_c *img, char ch, float 
 				  cur_alpha, cur_color, NULL, 0.0, 0.0, ch);
 }
 
-void HUD_DrawEndoomChar(float left_x, float top_y, float FNX, const image_c *img, char ch, rgbcol_t color1, rgbcol_t color2, bool blink)
+void HUD_DrawEndoomChar(float left_x, float top_y, float FNX, const image_c *img, char ch, epi::color_c color1, epi::color_c color2, bool blink)
 {
 	float w, h;
 	float tx1, tx2, ty1, ty2;
@@ -1047,9 +1047,9 @@ void HUD_DrawEndoomChar(float left_x, float top_y, float FNX, const image_c *img
 
 	float r = 1.0f, g = 1.0f, b = 1.0f;
 
-	r = RGB_RED(color2) / 255.0;
-	g = RGB_GRN(color2) / 255.0;
-	b = RGB_BLU(color2) / 255.0;
+	r = color2.r / 255.0;
+	g = color2.g / 255.0;
+	b = color2.b / 255.0;
 
 	RGL_StartUnits(false);
 
@@ -1082,9 +1082,9 @@ void HUD_DrawEndoomChar(float left_x, float top_y, float FNX, const image_c *img
 
 	RGL_FinishUnits();
 
-	r = RGB_RED(color1) / 255.0;
-	g = RGB_GRN(color1) / 255.0;
-	b = RGB_BLU(color1) / 255.0;
+	r = color1.r / 255.0;
+	g = color1.g / 255.0;
+	b = color1.b / 255.0;
 
 	GLuint tex_id = W_ImageCache(img, true, (const colourmap_c *)0, true);
 

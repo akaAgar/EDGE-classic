@@ -126,7 +126,7 @@ static void ColmapFinishEntry(void)
 
 	if (dynamic_colmap->lump_name.empty() &&
 		dynamic_colmap->pack_name.empty() &&
-		dynamic_colmap->gl_colour == RGB_NO_VALUE)
+		dynamic_colmap->gl_colour == epi::color_c::NoValue())
 	{
 		DDF_Error("Colourmap entry missing LUMP, PACK or GL_COLOUR.\n");
 	}
@@ -255,8 +255,8 @@ void colourmap_c::Default()
 	length  = 0;
 	special = COLSP_None;
 	
-	gl_colour   = RGB_NO_VALUE;
-	font_colour = RGB_NO_VALUE;
+	gl_colour   = epi::color_c::NoValue();
+	font_colour = epi::color_c::NoValue();
 
 	cache.data = NULL;
 	analysis = NULL;

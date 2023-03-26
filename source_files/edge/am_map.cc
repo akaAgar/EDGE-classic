@@ -51,22 +51,22 @@
 // Automap colors
 
 // NOTE: this order must match the one in the COAL API script
-static rgbcol_t am_colors[AM_NUM_COLORS] =
+static epi::color_c am_colors[AM_NUM_COLORS] =
 {
-	RGB_MAKE( 40, 40,112),  // AMCOL_Grid
-    RGB_MAKE(112,112,112),  // AMCOL_Allmap
-    RGB_MAKE(255,  0,  0),  // AMCOL_Wall
-    RGB_MAKE(192,128, 80),  // AMCOL_Step
-    RGB_MAKE(192,128, 80),  // AMCOL_Ledge
-    RGB_MAKE(220,220,  0),  // AMCOL_Ceil
-    RGB_MAKE(  0,200,200),  // AMCOL_Secret
+	{40, 40,112},  // AMCOL_Grid
+    {112,112,112},  // AMCOL_Allmap
+    {255,  0,  0},  // AMCOL_Wall
+    {192,128, 80},  // AMCOL_Step
+    {192,128, 80},  // AMCOL_Ledge
+    {220,220,  0},  // AMCOL_Ceil
+    {  0,200,200},  // AMCOL_Secret
 
-    RGB_MAKE(255,255,255),  // AMCOL_Player
-    RGB_MAKE(  0,255,  0),  // AMCOL_Monster
-    RGB_MAKE(220,  0,  0),  // AMCOL_Corpse
-    RGB_MAKE(  0,  0,255),  // AMCOL_Item
-    RGB_MAKE(255,188,  0),  // AMCOL_Missile
-    RGB_MAKE(120, 60, 30)   // AMCOL_Scenery
+    {255,255,255},  // AMCOL_Player
+    {  0,255,  0},  // AMCOL_Monster
+    {220,  0,  0},  // AMCOL_Corpse
+    {  0,  0,255},  // AMCOL_Item
+    {255,188,  0},  // AMCOL_Missile
+    {120, 60, 30}   // AMCOL_Scenery
 };
 
 
@@ -539,7 +539,7 @@ static inline angle_t GetRotatedAngle(angle_t src)
 //
 // Draw visible parts of lines.
 //
-static void DrawMLine(mline_t * ml, rgbcol_t rgb, bool thick = true)
+static void DrawMLine(mline_t * ml, epi::color_c rgb, bool thick = true)
 {
 	if (hide_lines)
 		return;
@@ -561,7 +561,7 @@ static void DrawMLine(mline_t * ml, rgbcol_t rgb, bool thick = true)
 }
 
 //Lobo 2022: keyed doors automap colouring
-static void DrawMLineDoor(mline_t * ml, rgbcol_t rgb)
+static void DrawMLineDoor(mline_t * ml, epi::color_c rgb)
 {
 	if (hide_lines)
 		return;
@@ -691,7 +691,7 @@ static void AM_WalkSeg(seg_t *seg)
 		GetRotatedCoords(seg->v1->x, seg->v1->y, l.a.x, l.a.y);
 		GetRotatedCoords(seg->v2->x, seg->v2->y, l.b.x, l.b.y);
 
-		DrawMLine(&l, RGB_MAKE(0,0,128), false);
+		DrawMLine(&l, {0,0,128), false);
 #endif
 		return;
 	}
@@ -724,27 +724,27 @@ static void AM_WalkSeg(seg_t *seg)
 				{
 					if(line->special->keys & KF_STRICTLY_ALL)
 					{
-						DrawMLineDoor(&l, RGB_MAKE(255,0,255)); //purple
+						DrawMLineDoor(&l, {255,0,255}); //purple
 					}
 					else if(line->special->keys & KF_BlueCard || line->special->keys & KF_BlueSkull)
 					{
-						DrawMLineDoor(&l, RGB_MAKE(0,0,255)); //blue
+						DrawMLineDoor(&l, {0,0,255}); //blue
 					}
 					else if(line->special->keys & KF_YellowCard || line->special->keys & KF_YellowSkull)
 					{
-						DrawMLineDoor(&l, RGB_MAKE(255,255,0)); //yellow
+						DrawMLineDoor(&l, {255,255,0}); //yellow
 					}
 					else if(line->special->keys & KF_RedCard || line->special->keys & KF_RedSkull)
 					{
-						DrawMLineDoor(&l, RGB_MAKE(255,0,0)); //red
+						DrawMLineDoor(&l, {255,0,0}); //red
 					}
 					else if(line->special->keys & KF_GreenCard || line->special->keys & KF_GreenSkull)
 					{
-						DrawMLineDoor(&l, RGB_MAKE(0,255,0)); //green
+						DrawMLineDoor(&l, {0,255,0}); //green
 					}
 					else
 					{
-						DrawMLineDoor(&l, RGB_MAKE(255,0,255)); //purple
+						DrawMLineDoor(&l, {255,0,255}); //purple
 					}
 					return;
 				}
@@ -799,7 +799,7 @@ static void AM_WalkSeg(seg_t *seg)
 
 static void DrawLineCharacter(mline_t *lineguy, int lineguylines, 
 							  float radius, angle_t angle,
-							  rgbcol_t rgb, float x, float y)
+							  epi::color_c rgb, float x, float y)
 {
 	float cx, cy;
 
@@ -871,16 +871,16 @@ static void DrawObjectBounds(mobj_t *mo, rgbcol_t rgb)
 #endif
 
 
-static rgbcol_t player_colors[8] =
+static epi::color_c player_colors[8] =
 {
-	RGB_MAKE(  5,255,  5),  // GREEN,
-	RGB_MAKE( 80, 80, 80),  // GRAY + GRAY_LEN*2/3,
-	RGB_MAKE(160,100, 50),  // BROWN,
-	RGB_MAKE(255,255,255),  // RED + RED_LEN/2,
-	RGB_MAKE(255,176,  5),  // ORANGE,
-	RGB_MAKE(170,170,170),  // GRAY + GRAY_LEN*1/3,
-	RGB_MAKE(255,  5,  5),  // RED,
-	RGB_MAKE(255,185,225),  // PINK
+	{  5,255,  5},  // GREEN,
+	{ 80, 80, 80},  // GRAY + GRAY_LEN*2/3,
+	{160,100, 50},  // BROWN,
+	{255,255,255},  // RED + RED_LEN/2,
+	{255,176,  5},  // ORANGE,
+	{170,170,170},  // GRAY + GRAY_LEN*1/3,
+	{255,  5,  5},  // RED,
+	{255,185,225},  // PINK
 };
 
 //
@@ -1155,7 +1155,7 @@ void AM_Render(float x, float y, float w, float h, mobj_t *focus, int flags)
 			HUD_TileImage(-90, 0, 500, 200, automap_style->bg_image, 0.0, 0.0);
 		HUD_SetAlpha(old_alpha);
 	}
-	else if (automap_style->def->bg.colour != RGB_NO_VALUE)
+	else if (automap_style->def->bg.colour != epi::color_c::NoValue())
 	{
 		float old_alpha = HUD_GetAlpha();
 		HUD_SetAlpha(automap_style->def->bg.translucency);
@@ -1173,7 +1173,7 @@ void AM_Render(float x, float y, float w, float h, mobj_t *focus, int flags)
 }
 
 
-void AM_SetColor(int which, rgbcol_t color)
+void AM_SetColor(int which, epi::color_c color)
 {
 	SYS_ASSERT(0 <= which && which < AM_NUM_COLORS);
 

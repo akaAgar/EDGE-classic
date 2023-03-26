@@ -21,8 +21,7 @@
 
 #include "epi.h"
 #include "arrays.h"
-
-#include "types.h"
+#include "math_color.h"
 
 // -AJA- 1999/07/09: colmap.ddf structures.
 
@@ -68,10 +67,10 @@ public:
 	colourspecial_e special;
 
 	// colours for GL renderer
-	rgbcol_t gl_colour;
+	epi::color_c gl_colour;
 
 
-	rgbcol_t font_colour;  // (computed only, not in DDF)
+	epi::color_c font_colour;  // (computed only, not in DDF)
 
 	colmapcache_t cache;
 

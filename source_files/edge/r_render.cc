@@ -2869,9 +2869,9 @@ static void DrawMirrorPolygon(drawmirror_c *mir)
 
 	if (ld->special)
 	{
-		R = RGB_RED(ld->special->fx_color) / 255.0;
-		G = RGB_GRN(ld->special->fx_color) / 255.0;
-		B = RGB_BLU(ld->special->fx_color) / 255.0;
+		R = ld->special->fx_color.r / 255.0;
+		G = ld->special->fx_color.g / 255.0;
+		B = ld->special->fx_color.b / 255.0;
 
 		// looks better with reduced color in multiple reflections
 		float reduce = 1.0f / (1 + 1.5 * num_active_mirrors);
@@ -2946,9 +2946,9 @@ static void DrawPortalPolygon(drawmirror_c *mir)
 	// set colour & alpha
 	float alpha = ld->special->translucency * surf->translucency;
 
-	float R = RGB_RED(ld->special->fx_color) / 255.0;
-	float G = RGB_GRN(ld->special->fx_color) / 255.0;
-	float B = RGB_BLU(ld->special->fx_color) / 255.0;
+	float R = ld->special->fx_color.r / 255.0;
+	float G = ld->special->fx_color.g / 255.0;
+	float B = ld->special->fx_color.b / 255.0;
 
 	// get polygon coordinates
 	float x1 = mir->seg->v1->x;

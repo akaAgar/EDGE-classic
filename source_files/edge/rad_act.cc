@@ -94,7 +94,7 @@ void RAD_InitTips(void)
 		current->p = fixed_props[i % FIXEDSLOTS];
 
 		current->delay = -1;
-		current->color = RGB_NO_VALUE;
+		current->color = epi::color_c::NoValue();
 
 		current->p.slot_num  = i;
 	}
@@ -122,7 +122,7 @@ static void SetupTip(drawtip_t *cur)
 	if (cur->tip_graphic)
 		return;
 
-	if (cur->color == RGB_NO_VALUE)
+	if (cur->color == epi::color_c::NoValue())
 		cur->color = V_ParseFontColor(cur->p.color_name);
 }
 

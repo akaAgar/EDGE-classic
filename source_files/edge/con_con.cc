@@ -68,11 +68,11 @@ font_c *endoom_font;
 // the console's background
 static style_c *console_style;
 
-static rgbcol_t current_color;
+static epi::color_c current_color;
 
 extern void E_ProgressMessage(const char *message);
 
-#define T_GREY176  RGB_MAKE(176,176,176)
+#define T_GREY176  epi::color_c(176, 176, 176)
  
 // TODO: console var
 #define MAX_CON_LINES  160
@@ -148,10 +148,10 @@ static void CON_AddLine(const char *s, bool partial)
 	for (int i = MAX_CON_LINES-1; i > 0; i--)
 		console_lines[i] = console_lines[i-1];
 
-	rgbcol_t col = current_color;
+	epi::color_c col = current_color;
 
-	if (col == T_LGREY && (epi::prefix_case_cmp(s, "WARNING") == 0))
-		col = T_ORANGE;
+	if (col == epi::color_c::LightGrey() && (epi::prefix_case_cmp(s, "WARNING") == 0))
+		col = epi::color_c::Orange();
 
 	console_lines[0] = new console_line_c(s, col);
 
@@ -182,10 +182,10 @@ static void CON_EndoomAddLine(byte endoom_byte, const char *s, bool partial)
 	for (int i = MAX_CON_LINES-1; i > 0; i--)
 		console_lines[i] = console_lines[i-1];
 
-	rgbcol_t col = current_color;
+	epi::color_c col = current_color;
 
-	if (col == T_LGREY && (epi::prefix_case_cmp(s, "WARNING") == 0))
-		col = T_ORANGE;
+	if (col == epi::color_c::LightGrey() && (epi::prefix_case_cmp(s, "WARNING") == 0))
+		col = epi::color_c::Orange();
 
 	console_lines[0] = new console_line_c(s, col);
 
@@ -216,7 +216,7 @@ static void CON_QuitAddLine(const char *s, bool partial)
 	for (int i = ENDOOM_LINES-1; i > 0; i--)
 		quit_lines[i] = quit_lines[i-1];
 
-	rgbcol_t col = current_color;
+	epi::color_c col = current_color;
 
 	quit_lines[0] = new console_line_c(s, col);
 
@@ -247,7 +247,7 @@ static void CON_QuitEndoomAddLine(byte endoom_byte, const char *s, bool partial)
 	for (int i = ENDOOM_LINES-1; i > 0; i--)
 		quit_lines[i] = quit_lines[i-1];
 
-	rgbcol_t col = current_color;
+	epi::color_c col = current_color;
 
 	quit_lines[0] = new console_line_c(s, col);
 
@@ -361,7 +361,7 @@ static void SplitIntoLines(char *src)
 		CON_AddLine(line, true);
 	}
 
-	current_color = T_LGREY;
+	current_color = epi::color_c::LightGrey();
 }
 
 static void EndoomSplitIntoLines(byte endoom_byte, char *src)
@@ -393,7 +393,7 @@ static void EndoomSplitIntoLines(byte endoom_byte, char *src)
 		CON_EndoomAddLine(endoom_byte, line, true);
 	}
 
-	current_color = T_LGREY;
+	current_color = epi::color_c::LightGrey();
 }
 
 static void QuitSplitIntoLines(char *src)
@@ -425,7 +425,7 @@ static void QuitSplitIntoLines(char *src)
 		CON_QuitAddLine(line, true);
 	}
 
-	current_color = T_LGREY;
+	current_color = epi::color_c::LightGrey();
 }
 
 static void QuitEndoomSplitIntoLines(byte endoom_byte, char *src)
@@ -445,7 +445,7 @@ static void QuitEndoomSplitIntoLines(byte endoom_byte, char *src)
 		CON_QuitEndoomAddLine(endoom_byte, line, true);
 	}
 
-	current_color = T_LGREY;
+	current_color = epi::color_c::LightGrey();
 }
 
 void CON_Printf(const char *message, ...)
@@ -553,7 +553,7 @@ void CON_ImportantMessageLDF(const char *lookup, ...)
 	SplitIntoLines(buffer);
 }
 
-void CON_MessageColor(rgbcol_t col)
+void CON_MessageColor(epi::color_c col)
 {
 	current_color = col;
 }
@@ -597,12 +597,12 @@ static void CalcSizes()
 }
 
 
-static void SolidBox(int x, int y, int w, int h, rgbcol_t col, float alpha)
+static void SolidBox(int x, int y, int w, int h, epi::color_c col, float alpha)
 {
 
-	float r = RGB_RED(col)/255.0;
-	float g = RGB_GRN(col)/255.0;
-	float b = RGB_BLU(col)/255.0;
+	float r = col.r/255.0;
+	float g = col.g/255.0;
+	float b = col.b/255.0;
 
 	int first_vert_index = 0;
 
@@ -630,7 +630,7 @@ static void SolidBox(int x, int y, int w, int h, rgbcol_t col, float alpha)
 	RGL_EndUnit(4);
 }
 
-static void HorizontalLine(int y, rgbcol_t col)
+static void HorizontalLine(int y, epi::color_c col)
 {
 	float alpha = 1.0f;
 
@@ -638,15 +638,15 @@ static void HorizontalLine(int y, rgbcol_t col)
 }
 
 
-static void DrawChar(int x, int y, char ch, rgbcol_t col)
+static void DrawChar(int x, int y, char ch, epi::color_c col)
 {
 	if (x + FNSZ < 0)
 		return;
 
 	float alpha = 1.0f;
-	float r = RGB_RED(col)/255.0f;
-	float g =  RGB_GRN(col)/255.0f;
-	float b = RGB_BLU(col)/255.0f;
+	float r = col.r/255.0f;
+	float g =  col.g/255.0f;
+	float b = col.b/255.0f;
 
 	if (con_font->def->type == FNTYP_TrueType)
 	{
@@ -734,15 +734,15 @@ static void DrawChar(int x, int y, char ch, rgbcol_t col)
 	RGL_EndUnit(4);
 }
 
-static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, bool blink, GLuint tex_id)
+static void DrawEndoomChar(int x, int y, char ch, epi::color_c col, epi::color_c col2, bool blink, GLuint tex_id)
 {
 	if (x + FNSZ < 0)
 		return;
 
 	float alpha = 1.0f;
-	float r = RGB_RED(col2)/255.0f;
-	float g = RGB_GRN(col2)/255.0f;
-	float b = RGB_BLU(col2)/255.0f;
+	float r = col2.r/255.0f;
+	float g = col2.g/255.0f;
+	float b = col2.b/255.0f;
 
 	int first_vert_index = 0;
 
@@ -769,9 +769,9 @@ static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, b
 	}
 	RGL_EndUnit(4);
 
-	r = RGB_RED(col)/255.0f;
-	g = RGB_GRN(col)/255.0f;
-	b =	RGB_BLU(col)/255.0f;
+	r = col.r/255.0f;
+	g = col.g/255.0f;
+	b =	col.b/255.0f;
 
 	if (blink && con_cursor >= 16)
 		ch = 0x20;
@@ -814,7 +814,7 @@ static void DrawEndoomChar(int x, int y, char ch, rgbcol_t col, rgbcol_t col2, b
 }
 
 // writes the text on coords (x,y) of the console
-static void DrawText(int x, int y, const char *s, rgbcol_t col)
+static void DrawText(int x, int y, const char *s, epi::color_c col)
 {
 	bool draw_cursor = false;
 
@@ -926,12 +926,12 @@ void CON_Drawer(void)
 		HUD_RawImage(0, y, SCREENWIDTH, y + CON_GFX_HT, img,
 			0.0, 0.0, IM_RIGHT(img), IM_TOP(img),
 			console_style->def->bg.translucency,
-			RGB_NO_VALUE, NULL, 0, 0);
+			epi::color_c::NoValue(), NULL, 0, 0);
 	}
 	else
 	{
-		SolidBox(0, y, SCREENWIDTH, SCREENHEIGHT - y, console_style->def->bg.colour != RGB_NO_VALUE ?
-			console_style->def->bg.colour : RGB_MAKE(0,0,0), console_style->def->bg.translucency);
+		SolidBox(0, y, SCREENWIDTH, SCREENHEIGHT - y, console_style->def->bg.colour != epi::color_c::NoValue() ?
+			console_style->def->bg.colour : epi::color_c::Black(), console_style->def->bg.translucency);
 	}
 
 	y += FNSZ / 4 + (con_font->def->type == FNTYP_TrueType ? FNSZ : 0);
@@ -940,7 +940,7 @@ void CON_Drawer(void)
 
 	if (bottomrow == -1)
 	{
-		DrawText(0, y, ">", T_PURPLE);
+		DrawText(0, y, ">", epi::color_c::Purple());
 
 		if (cmd_hist_pos >= 0)
 		{
@@ -949,11 +949,11 @@ void CON_Drawer(void)
 			if (con_cursor < 16)
 				text.append("_");
 
-			DrawText(XMUL, y, text.c_str(), T_PURPLE);
+			DrawText(XMUL, y, text.c_str(), epi::color_c::Purple());
 		}
 		else
 		{
-			DrawText(XMUL, y, input_line, T_PURPLE);
+			DrawText(XMUL, y, input_line, epi::color_c::Purple());
 		}
 
 		y += FNSZ;
@@ -1066,7 +1066,7 @@ static char KeyToCharacter(int key, bool shift, bool ctrl)
 
 
 static void ListCompletions(std::vector<const char *> & list,
-                            int word_len, int max_row, rgbcol_t color)
+                            int word_len, int max_row, epi::color_c color)
 {
 	int max_col = SCREENWIDTH / XMUL - 4;
 	max_col = CLAMP(24, max_col, 78);
@@ -1197,7 +1197,7 @@ static void TabComplete(void)
 	}
 
 	// show what we were trying to match
-	CON_MessageColor(T_LTBLUE);
+	CON_MessageColor(epi::color_c::LightBlue());
 	CON_Printf(">%s\n", input_line);
 
 	input_line[input_pos] = save_ch;
@@ -1212,21 +1212,21 @@ static void TabComplete(void)
 	{
 		CON_Printf("%u Possible variables:\n", (int)match_vars.size());
 
-		ListCompletions(match_vars, input_pos, 7, RGB_MAKE(0,208,72));
+		ListCompletions(match_vars, input_pos, 7, epi::color_c(0,208,72));
 	}
 
 	if (match_keys.size() > 0)
 	{
 		CON_Printf("%u Possible keys:\n", (int)match_keys.size());
 
-		ListCompletions(match_keys, input_pos, 4, RGB_MAKE(0,208,72));
+		ListCompletions(match_keys, input_pos, 4, epi::color_c(0,208,72));
 	}
 
 	if (match_cmds.size() > 0)
 	{
 		CON_Printf("%u Possible commands:\n", (int)match_cmds.size());
 
-		ListCompletions(match_cmds, input_pos, 3, T_ORANGE);
+		ListCompletions(match_cmds, input_pos, 3, epi::color_c::Orange());
 	}
 
 	// Add as many common characters as possible
@@ -1366,7 +1366,7 @@ void CON_HandleKey(int key, bool shift, bool ctrl)
 
 		if (strlen(input_line) == 0)
 		{
-			CON_MessageColor(T_LTBLUE);
+			CON_MessageColor(epi::color_c::LightBlue());
 			CON_Printf(">\n");
 		}
 		else
@@ -1374,7 +1374,7 @@ void CON_HandleKey(int key, bool shift, bool ctrl)
 			// Add it to history & draw it
 			CON_AddCmdHistory(input_line);
 
-			CON_MessageColor(T_LTBLUE);
+			CON_MessageColor(epi::color_c::LightBlue());
 			CON_Printf(">%s\n", input_line);
 		
 			// Run it!
@@ -1641,7 +1641,7 @@ void CON_InitConsole(void)
 
 	CON_ClearInputLine();
 
-	current_color = T_LGREY;
+	current_color = epi::color_c::LightGrey();
 
 	CON_AddLine("", false);
 	CON_AddLine("", false);
@@ -1706,7 +1706,7 @@ void CON_ShowFPS(void)
 	if (abs(debug_fps.d) >= 2)
 		y -= FNSZ;
 
-	SolidBox(x, y, SCREENWIDTH, SCREENHEIGHT, RGB_MAKE(0,0,0), 0.5);
+	SolidBox(x, y, SCREENWIDTH, SCREENHEIGHT, epi::color_c::Black(), 0.5);
 
 	x += XMUL;
 	y = SCREENHEIGHT - FNSZ - FNSZ * (con_font->def->type == FNTYP_TrueType ? -0.5 : 0.5);
@@ -1758,7 +1758,7 @@ void CON_ShowPosition(void)
 	int x = SCREENWIDTH  - XMUL * 16;
 	int y = SCREENHEIGHT - FNSZ * 5;
 
-	SolidBox(x, y - FNSZ * 10, XMUL * 16, FNSZ * 10 + 2, RGB_MAKE(0,0,0), 0.5);
+	SolidBox(x, y - FNSZ * 10, XMUL * 16, FNSZ * 10 + 2, epi::color_c::Black(), 0.5);
 
 	x += XMUL;
 	y -= FNSZ * (con_font->def->type == FNTYP_TrueType ? 0.25 : 1.25);

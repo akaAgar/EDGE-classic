@@ -664,7 +664,7 @@ void P_ActDLightColour(struct mobj_s *mo)
 
 	if (st && st->action_par)
 	{
-		mo->dlight.color = ((rgbcol_t*) st->action_par)[0];
+		mo->dlight.color = ((epi::color_c*) st->action_par)[0];
 	}
 }
 

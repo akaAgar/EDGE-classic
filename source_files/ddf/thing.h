@@ -21,7 +21,7 @@
 
 #include "epi.h"
 #include "arrays.h"
-
+#include "math_color.h"
 #include "types.h"
 #include "states.h"
 
@@ -817,7 +817,7 @@ public:
 	dlight_type_e type;
 	std::string shape;  // IMAGES.DDF reference
 	float radius;
-	rgbcol_t colour;
+	epi::color_c colour;
 	percent_t height;
 	bool leaky;
 

@@ -76,11 +76,11 @@ void RGL_DrawImage(float x, float y, float w, float h, const image_c *image,
 
 	if (textmap)
 	{
-		rgbcol_t col = V_GetFontColor(textmap);
+		epi::color_c col = V_GetFontColor(textmap);
 
-		r = RGB_RED(col) / 255.0;
-		g = RGB_GRN(col) / 255.0;
-		b = RGB_BLU(col) / 255.0;
+		r = col.r / 255.0;
+		g = col.g / 255.0;
+		b = col.b / 255.0;
 	}
 
 	int first_vert_index = 0;

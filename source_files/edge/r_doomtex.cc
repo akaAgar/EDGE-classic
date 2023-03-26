@@ -444,9 +444,9 @@ static epi::image_data_c * CreateUserColourImage(image_c *rim, imagedef_c *def)
 	for (int y = 0; y < img->height; y++)
 	for (int x = 0; x < img->width;  x++)
 	{
-		*dest++ = (def->colour & 0xFF0000) >> 16;  // R
-		*dest++ = (def->colour & 0x00FF00) >>  8;  // G
-		*dest++ = (def->colour & 0x0000FF);        // B
+		*dest++ = def->colour.r;
+		*dest++ = def->colour.g;
+		*dest++ = def->colour.b;
 	}
 
 	return img;

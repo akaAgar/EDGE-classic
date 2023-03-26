@@ -668,7 +668,7 @@ typedef struct drawtip_s
 	float scale;
 
 	// current colour
-	rgbcol_t color;
+	epi::color_c color;
 
 	// fading fields
 	int fade_time;

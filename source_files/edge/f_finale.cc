@@ -99,7 +99,7 @@ static void CastSkip(void);
 
 static const image_c *finale_textback;
 static float finale_textbackscale = 1.0f;
-static rgbcol_t finale_textcol;
+static epi::color_c finale_textcol;
 
 static style_c *wi_leveltext_style;
 static style_c *wi_cast_style;
@@ -735,7 +735,7 @@ static void CastDrawer(void)
 	}
 	else
 	{	
-		HUD_SetTextColor(T_YELLOW); 
+		HUD_SetTextColor(epi::color_c::Yellow()); 
 	}
 
 	TempScale = wi_cast_style->def->text[styledef_c::T_TEXT].scale;

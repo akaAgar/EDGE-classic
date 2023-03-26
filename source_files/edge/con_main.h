@@ -19,13 +19,13 @@
 #ifndef __CON_MAIN_H
 #define __CON_MAIN_H
 
-#include "types.h"
+#include "math_color.h"
 
 #include <vector>
 
 #define ENDOOM_LINES 25
 
-const rgbcol_t endoom_colors[16] = 
+const epi::color_c endoom_colors[16] = 
 {
 0x000000,
 0x0000AA,
@@ -50,16 +50,16 @@ class console_line_c
 public:
 	std::string line;
 
-	rgbcol_t color;
+	epi::color_c color;
 
 	std::vector<byte> endoom_bytes;
 
 public:
-	console_line_c(const std::string& text, rgbcol_t _col = T_LGREY) :
+	console_line_c(const std::string& text, epi::color_c _col = epi::color_c::LightGrey()) :
 		line(text), color(_col) 
 	{ }
 
-	console_line_c(const char *text, rgbcol_t _col = T_LGREY) :
+	console_line_c(const char *text, epi::color_c _col = epi::color_c::LightGrey()) :
 		line(text), color(_col)
 	{ }
 
@@ -112,7 +112,7 @@ void CON_PlayerMessage(int plyr, const char *message, ...) GCCATTR((format(print
 void CON_PlayerMessageLDF(int plyr, const char *message, ...);
 
 // this color will apply to the next CON_Message or CON_Printf call.
-void CON_MessageColor(rgbcol_t col);
+void CON_MessageColor(epi::color_c col);
 
 typedef enum
 {

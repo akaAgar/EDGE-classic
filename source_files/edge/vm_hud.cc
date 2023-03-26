@@ -70,20 +70,20 @@ static float ui_hud_automap_zoom;
 //------------------------------------------------------------------------
 
 
-rgbcol_t VM_VectorToColor(double * v)
+epi::color_c VM_VectorToColor(double * v)
 {
 	if (v[0] < 0)
-		return RGB_NO_VALUE;
+		return epi::color_c::NoValue();
 
 	int r = CLAMP(0, (int)v[0], 255);
 	int g = CLAMP(0, (int)v[1], 255);
 	int b = CLAMP(0, (int)v[2], 255);
 
-	rgbcol_t rgb = RGB_MAKE(r, g, b);
+	epi::color_c rgb = epi::color_c(r, g, b);
 
 	// ensure we don't get the "no color" value by mistake
-	if (rgb == RGB_NO_VALUE)
-		rgb ^= 0x000101;
+	if (rgb == epi::color_c::NoValue())
+		rgb = epi::color_c::NoValue().GetPacked() ^ 0x000101;
 
 	return rgb;
 }
@@ -204,7 +204,7 @@ static void HD_text_color(coal::vm_c *vm, int argc)
 {
 	double * v = vm->AccessParam(0);
 
-	rgbcol_t color = VM_VectorToColor(v);
+	epi::color_c color = VM_VectorToColor(v);
 
 	HUD_SetTextColor(color);
 }
@@ -242,7 +242,7 @@ static void HD_solid_box(coal::vm_c *vm, int argc)
 	float w = *vm->AccessParam(2);
 	float h = *vm->AccessParam(3);
 
-	rgbcol_t rgb = VM_VectorToColor(vm->AccessParam(4));
+	epi::color_c rgb = VM_VectorToColor(vm->AccessParam(4));
 
 	HUD_SolidBox(x, y, x+w, y+h, rgb);
 }
@@ -257,7 +257,7 @@ static void HD_solid_line(coal::vm_c *vm, int argc)
 	float x2 = *vm->AccessParam(2);
 	float y2 = *vm->AccessParam(3);
 
-	rgbcol_t rgb = VM_VectorToColor(vm->AccessParam(4));
+	epi::color_c rgb = VM_VectorToColor(vm->AccessParam(4));
 
 	HUD_SolidLine(x1, y1, x2, y2, rgb);
 }
@@ -272,7 +272,7 @@ static void HD_thin_box(coal::vm_c *vm, int argc)
 	float w = *vm->AccessParam(2);
 	float h = *vm->AccessParam(3);
 
-	rgbcol_t rgb = VM_VectorToColor(vm->AccessParam(4));
+	epi::color_c rgb = VM_VectorToColor(vm->AccessParam(4));
 
 	HUD_ThinBox(x, y, x+w, y+h, rgb);
 }
@@ -287,7 +287,7 @@ static void HD_gradient_box(coal::vm_c *vm, int argc)
 	float w = *vm->AccessParam(2);
 	float h = *vm->AccessParam(3);
 
-	rgbcol_t cols[4];
+	epi::color_c cols[4];
 
 	cols[0] = VM_VectorToColor(vm->AccessParam(4));
 	cols[1] = VM_VectorToColor(vm->AccessParam(5));
@@ -615,7 +615,7 @@ static void HD_automap_color(coal::vm_c *vm, int argc)
 
 	which--;
 
-	rgbcol_t rgb = VM_VectorToColor(vm->AccessParam(1));
+	epi::color_c rgb = VM_VectorToColor(vm->AccessParam(1));
 
 	AM_SetColor(which, rgb);
 }

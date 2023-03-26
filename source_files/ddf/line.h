@@ -21,8 +21,7 @@
 
 #include "epi.h"
 #include "arrays.h"
-
-#include "types.h"
+#include "math_color.h"
 
 // ------------------------------------------------------------------
 // ------------------------LINEDEF TYPES-----------------------------
@@ -828,7 +827,7 @@ public:
 	slope_type_e slope_type;
 
 	// -AJA- 2007/07/05: color for effects (e.g. MIRRORs)
-	rgbcol_t fx_color;
+	epi::color_c fx_color;
 
 private:
 	// disable copy construct and assignment operator

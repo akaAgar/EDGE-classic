@@ -289,9 +289,9 @@ void R_TranslatePalette(byte *new_pal, const byte *old_pal,
 	// is the colormap just using GL_COLOUR?
 	if (trans->length == 0)
 	{
-		int r = RGB_RED(trans->gl_colour);
-		int g = RGB_GRN(trans->gl_colour);
-		int b = RGB_BLU(trans->gl_colour);
+		int r = trans->gl_colour.r;
+		int g = trans->gl_colour.g;
+		int b = trans->gl_colour.b;
 
 		for (int j = 0; j < 256; j++)
 		{
@@ -421,9 +421,9 @@ void TransformColourmap(colourmap_c *colmap)
 		table = (byte *) colmap->cache.data;
 	}
 
-	if (colmap->font_colour == RGB_NO_VALUE)
+	if (colmap->font_colour == epi::color_c::NoValue())
 	{
-		if (colmap->gl_colour != RGB_NO_VALUE)
+		if (colmap->gl_colour != epi::color_c::NoValue())
 			colmap->font_colour = colmap->gl_colour;
 		else
 		{
@@ -438,11 +438,11 @@ void TransformColourmap(colourmap_c *colmap)
 			g = MIN(255, MAX(0, g));
 			b = MIN(255, MAX(0, b));
 
-			colmap->font_colour = RGB_MAKE(r, g, b);
+			colmap->font_colour = epi::color_c(r, g, b);
 		}
 	}
 
-	if (colmap->gl_colour == RGB_NO_VALUE)
+	if (colmap->gl_colour == epi::color_c::NoValue())
 	{
 		SYS_ASSERT(table);
 
@@ -460,36 +460,36 @@ void TransformColourmap(colourmap_c *colmap)
 		g = MIN(255, MAX(0, g));
 		b = MIN(255, MAX(0, b));
 
-		colmap->gl_colour = RGB_MAKE(r, g, b);
+		colmap->gl_colour = epi::color_c(r, g, b);
 	}
 
 	L_WriteDebug("TransformColourmap [%s]\n", colmap->name.c_str());
-	L_WriteDebug("- gl_colour   = #%06x\n", colmap->gl_colour);
+	L_WriteDebug("- gl_colour   = #%06x\n", colmap->gl_colour.GetPacked());
 }
 
 
 void V_GetColmapRGB(const colourmap_c *colmap, float *r, float *g, float *b)
 {
-	if (colmap->gl_colour == RGB_NO_VALUE)
+	if (colmap->gl_colour == epi::color_c::NoValue())
 	{
 		// Intention Const Override
 		TransformColourmap((colourmap_c *)colmap);
 	}
 
-	rgbcol_t col = colmap->gl_colour;
+	epi::color_c col = colmap->gl_colour;
 
-	(*r) = GAMMA_CONV((col >> 16) & 0xFF) / 255.0f;
-	(*g) = GAMMA_CONV((col >>  8) & 0xFF) / 255.0f;
-	(*b) = GAMMA_CONV((col      ) & 0xFF) / 255.0f;
+	(*r) = col.r / 255.0f;
+	(*g) = col.g / 255.0f;
+	(*b) = col.b / 255.0f;
 }
 
 
-rgbcol_t V_GetFontColor(const colourmap_c *colmap)
+epi::color_c V_GetFontColor(const colourmap_c *colmap)
 {
 	if (! colmap)
-		return RGB_NO_VALUE;
+		return epi::color_c::NoValue();
 
-	if (colmap->font_colour == RGB_NO_VALUE)
+	if (colmap->font_colour == epi::color_c::NoValue())
 	{
 		// Intention Const Override
 		TransformColourmap((colourmap_c *)colmap);
@@ -499,12 +499,12 @@ rgbcol_t V_GetFontColor(const colourmap_c *colmap)
 }
 
 
-rgbcol_t V_ParseFontColor(const char *name, bool strict)
+epi::color_c V_ParseFontColor(const char *name, bool strict)
 {
 	if (! name || ! name[0])
-		return RGB_NO_VALUE;
+		return epi::color_c::NoValue();
 
-	rgbcol_t rgb;
+	epi::color_c rgb;
 
 	if (name[0] == '#')
 	{
@@ -521,14 +521,14 @@ rgbcol_t V_ParseFontColor(const char *name, bool strict)
 			else
 				I_Debugf("Unknown colormap: '%s'\n", name);
 
-			return RGB_MAKE(255,0,255);
+			return epi::color_c::Purple();
 		}
 
 		rgb = V_GetFontColor(colmap);
 	}
 
-	if (rgb == RGB_NO_VALUE)
-		rgb ^= 0x000101;
+	if (rgb == epi::color_c::NoValue())
+		rgb = (epi::color_c::NoValue().GetPacked() ^ 0x000101);
 	
 	return rgb;
 }
@@ -544,13 +544,13 @@ void V_IndexColourToRGB(int indexcol, byte *returncol)
 	returncol[2] = playpal_data[cur_palette][indexcol][2];
 }
 
-rgbcol_t V_LookupColour(int col)
+epi::color_c V_LookupColour(int col)
 {
 	int r = playpal_data[0][col][0];
 	int g = playpal_data[0][col][1];
 	int b = playpal_data[0][col][2];
 
-	return RGB_MAKE(r,g,b);
+	return epi::color_c(r,g,b);
 }
 
 
@@ -646,7 +646,7 @@ private:
 	bool simple_cmap;
 	lighting_model_e lt_model;
 
-	rgbcol_t whites[32];
+	epi::color_c whites[32];
 
 public:
 	colormap_shader_c(const colourmap_c *CM) : colmap(CM),
@@ -693,11 +693,11 @@ public:
 		else
 			cmap_idx = R_DoomLightingEquation(light_lev/4, dist);
 
-		rgbcol_t WH = whites[cmap_idx];
+		epi::color_c WH = whites[cmap_idx];
 
-		col->mod_R += RGB_RED(WH);
-		col->mod_G += RGB_GRN(WH);
-		col->mod_B += RGB_BLU(WH);
+		col->mod_R += WH.r;
+		col->mod_G += WH.g;
+		col->mod_B += WH.b;
 
 		// FIXME: for foggy maps, need to adjust add_R/G/B too
 	}
@@ -796,18 +796,18 @@ private:
 				int g = playpal_data[0][new_col][1];
 				int b = playpal_data[0][new_col][2];
 
-				whites[ci] = RGB_MAKE(r, g, b);
+				whites[ci] = epi::color_c(r, g, b);
 			}
 		}
 		else if (colmap)  // GL_COLOUR
 		{
 			for (int ci = 0; ci < 32; ci++)
 			{
-				int r = RGB_RED(colmap->gl_colour) * (31-ci) / 31;
-				int g = RGB_GRN(colmap->gl_colour) * (31-ci) / 31;
-				int b = RGB_BLU(colmap->gl_colour) * (31-ci) / 31;
+				int r = colmap->gl_colour.r * (31-ci) / 31;
+				int g = colmap->gl_colour.g * (31-ci) / 31;
+				int b = colmap->gl_colour.b * (31-ci) / 31;
 
-				whites[ci] = RGB_MAKE(r, g, b);
+				whites[ci] = epi::color_c(r, g, b);
 			}
 		}
 		else
@@ -816,7 +816,7 @@ private:
 			{
 				int ity = 255 - ci * 8 - ci / 5;
 
-				whites[ci] = RGB_MAKE(ity, ity, ity);
+				whites[ci] = epi::color_c(ity, ity, ity);
 			}
 		}
 
@@ -856,9 +856,9 @@ private:
 					// GL_MODULATE mode
 					if (colmap)
 					{
-						dest[0] = RGB_RED(whites[index]);
-						dest[1] = RGB_GRN(whites[index]);
-						dest[2] = RGB_BLU(whites[index]);
+						dest[0] = whites[index].r;
+						dest[1] = whites[index].g;
+						dest[2] = whites[index].b;
 						dest[3] = 255;
 					}
 					else

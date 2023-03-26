@@ -1415,25 +1415,25 @@ void DDF_MainGetColourmap(const char *info, void *storage)
 //
 void DDF_MainGetRGB(const char *info, void *storage)
 {
-	rgbcol_t *result = (rgbcol_t *)storage;
+	epi::color_c *result = (epi::color_c *)storage;
 	int r, g, b;
 
 	SYS_ASSERT(info && storage);
 
 	if (DDF_CompareName(info, "NONE") == 0)
 	{
-		*result = RGB_NO_VALUE;
+		*result = epi::color_c::NoValue();
 		return;
 	}
 
 	if (sscanf(info, " #%2x%2x%2x ", &r, &g, &b) != 3)
 		DDF_Error("Bad RGB colour value: %s\n", info);
 
-	*result = (r << 16) | (g << 8) | b;
+	*result = epi::color_c(r, g, b);
 
 	// silently change if matches the "none specified" value
-	if (*result == RGB_NO_VALUE)
-		*result ^= RGB_MAKE(1,1,1);
+	if (*result == epi::color_c::NoValue())
+		*result = epi::color_c(epi::color_c::NoValue().GetPacked() ^ epi::color_c(1,1,1).GetPacked());
 }
 
 //
@@ -2073,7 +2073,7 @@ void dlight_info_c::Default()
 {
 	type   = DLITE_None;
 	radius = 32;
-	colour = RGB_MAKE(255, 255, 255);
+	colour = epi::color_c::White();
 	height = PERCENT_MAKE(50);
 	leaky  = false;
 	shape  = "DLIGHT_EXP";

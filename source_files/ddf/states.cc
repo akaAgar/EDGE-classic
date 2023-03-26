@@ -1023,7 +1023,7 @@ void DDF_StateGetRGB(const char *arg, state_t * cur_state)
 	if (!arg || !arg[0])
 		return;
 
-	cur_state->action_par = new rgbcol_t;
+	cur_state->action_par = new epi::color_c;
 
 	DDF_MainGetRGB(arg, cur_state->action_par);
 }

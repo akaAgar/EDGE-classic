@@ -42,9 +42,7 @@ void V_InitColour(void);
 // -ACB- 1999/10/11 Gets an RGB colour from the current palette
 void V_IndexColourToRGB(int indexcol, byte *returncol);
 
-rgbcol_t V_LookupColour(int col);
-
-#define GAMMA_CONV(light)  (light)
+epi::color_c V_LookupColour(int col);
 
 // -AJA- 1999/07/03: Some palette stuff.
 extern byte playpal_data[14][256][3];
@@ -82,8 +80,8 @@ void R_TranslatePalette(byte *new_pal, const byte *old_pal,
 
 void V_GetColmapRGB(const colourmap_c *colmap, float *r, float *g, float *b);
 
-rgbcol_t V_GetFontColor(const colourmap_c *colmap);
-rgbcol_t V_ParseFontColor(const char *name, bool strict = false);
+epi::color_c V_GetFontColor(const colourmap_c *colmap);
+epi::color_c V_ParseFontColor(const char *name, bool strict = false);
 
 abstract_shader_c *R_GetColormapShader(
 		const struct region_properties_s *props, int light_add = 0);

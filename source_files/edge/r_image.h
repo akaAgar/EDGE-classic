@@ -134,7 +134,7 @@ public:
 		struct { struct texturedef_s *tdef; } texture;
 
 		// case IMSRC_Dummy:
-		struct { rgbcol_t fg; rgbcol_t bg; } dummy;
+		struct { uint32_t fg; uint32_t bg; } dummy;
 
 		// case IMSRC_User:
 		struct { imagedef_c *def; } user;

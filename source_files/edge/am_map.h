@@ -26,7 +26,7 @@
 #ifndef __AMMAP_H__
 #define __AMMAP_H__
 
-#include "types.h"
+#include "math_color.h"
 
 #include "dm_defs.h"
 #include "e_event.h"
@@ -91,7 +91,7 @@ typedef enum
 }
 automap_color_e;
 
-void AM_SetColor(int which, rgbcol_t color);
+void AM_SetColor(int which, epi::color_c color);
 
 
 // NOTE: the bit numbers here must match the COAL API script

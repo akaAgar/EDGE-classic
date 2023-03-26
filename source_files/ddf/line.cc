@@ -1774,7 +1774,7 @@ void linetype_c::Default(void)
 	sector_effect = SECTFX_None;
 	portal_effect = PORTFX_None;
 	slope_type = SLP_NONE;
-	fx_color = RGB_MAKE(0,0,0);
+	fx_color = epi::color_c::Black();
 	
 	//lobo 2022
 	effectobject = NULL;	

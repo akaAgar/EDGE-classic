@@ -243,7 +243,7 @@ public:
 		if (loading_image)
 		{
 			HUD_DrawImageTitleWS(loading_image);
-			HUD_SolidBox(25, 25, 295, 175, RGB_MAKE(0, 0, 0));
+			HUD_SolidBox(25, 25, 295, 175, epi::color_c::Black());
 		}
 		int y = 26;
 		for (int i=0; i < (int)startup_messages.size(); i++)
@@ -492,7 +492,7 @@ static void SpecialWadVerify(void)
 //
 static void ShowNotice(void)
 {
-	CON_MessageColor(RGB_MAKE(64,192,255));
+	CON_MessageColor(epi::color_c(64,192,255));
 
 	I_Printf("%s", language["Notice"]);
 }
@@ -710,7 +710,7 @@ static void E_TitleDrawer(void)
 	}	
 	else
 	{
-		HUD_SolidBox(0, 0, 320, 200, RGB_MAKE(64,64,64));
+		HUD_SolidBox(0, 0, 320, 200, epi::color_c::DarkGrey());
 	}
 }
 
@@ -1781,7 +1781,7 @@ void E_Main(int argc, const char **argv)
 
 		E_InitialState();
 
-		CON_MessageColor(RGB_MAKE(255,255,0));
+		CON_MessageColor(epi::color_c::Yellow());
 		I_Printf("EDGE-Classic v" EDGEVERSTR " initialisation complete.\n");
 
 		I_Debugf("- Entering game loop...\n");

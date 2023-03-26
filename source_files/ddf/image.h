@@ -21,8 +21,7 @@
 
 #include "epi.h"
 #include "arrays.h"
-
-#include "types.h"
+#include "math_color.h"
 
 typedef enum
 {
@@ -103,7 +102,7 @@ public:
 
 	imagedata_type_e type;
 
-	rgbcol_t colour;          // IMGDT_Colour
+	epi::color_c colour;          // IMGDT_Colour
 
 	std::string info;         // IMGDT_Package, IMGDT_File, IMGDT_Lump
 	L_image_format_e format;  //

@@ -401,7 +401,7 @@ static void RGL_DrawPSprite(pspdef_t * psp, int which,
 	glDisable(GL_SCISSOR_TEST);
 }
 
-static const rgbcol_t crosshair_colors[8] =
+static const epi::color_c crosshair_colors[8] =
 {
 	0xCCCCCC, 0x0000FF, 0x00DD00, 0x00DDDD,
 	0xFF0000, 0xFF00FF, 0xDDDD00, 0xFF9922,
@@ -438,14 +438,14 @@ static void DrawStdCrossHair(void)
 
 	xh_count += xh_dir;
 
-	rgbcol_t color = crosshair_colors[r_crosscolor.d & 7];
+	epi::color_c color = crosshair_colors[r_crosscolor.d & 7];
 	float intensity = 1.0f - xh_count / 100.0f;
 
 	intensity *= r_crossbright.f;
 
-	float r = RGB_RED(color) * intensity / 255.0f;
-	float g = RGB_GRN(color) * intensity / 255.0f;
-	float b = RGB_BLU(color) * intensity / 255.0f;
+	float r = color.r * intensity / 255.0f;
+	float g = color.g * intensity / 255.0f;
+	float b = color.b * intensity / 255.0f;
 
 	float x = viewwindow_x + viewwindow_w / 2;
 	float y = viewwindow_y + viewwindow_h / 2;

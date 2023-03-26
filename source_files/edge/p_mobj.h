@@ -32,6 +32,7 @@
 #ifndef __P_MOBJ_H__
 #define __P_MOBJ_H__
 
+#include "math_color.h"
 #include "types.h"
 #include "m_math.h"
 
@@ -177,7 +178,7 @@ typedef struct dlight_state_s
 {
 	float r;  // radius
 	float target;  // target radius
-	rgbcol_t color;
+	epi::color_c color;
 ///--- const image_c *image;
 	abstract_shader_c *shader;
 }

@@ -19,9 +19,7 @@
 #ifndef __R_SHADER_H__
 #define __R_SHADER_H__
 
-#include "types.h"
-
-/// #include "r_units.h"
+#include "math_color.h"
 
 class multi_color_c
 {
@@ -60,22 +58,22 @@ public:
 		return MAX(add_R, MAX(add_G, add_B));
 	}
 
-	void mod_Give(rgbcol_t rgb, float qty)
+	void mod_Give(epi::color_c rgb, float qty)
 	{
 		if (qty > 100) qty = 100;
 
-		mod_R += (int)(RGB_RED(rgb) * qty);
-		mod_G += (int)(RGB_GRN(rgb) * qty);
-		mod_B += (int)(RGB_BLU(rgb) * qty);
+		mod_R += (int)(rgb.r * qty);
+		mod_G += (int)(rgb.g * qty);
+		mod_B += (int)(rgb.b * qty);
 	}
 
-	void add_Give(rgbcol_t rgb, float qty)
+	void add_Give(epi::color_c rgb, float qty)
 	{
 		if (qty > 100) qty = 100;
 
-		add_R += (int)(RGB_RED(rgb) * qty);
-		add_G += (int)(RGB_GRN(rgb) * qty);
-		add_B += (int)(RGB_BLU(rgb) * qty);
+		add_R += (int)(rgb.r * qty);
+		add_G += (int)(rgb.g * qty);
+		add_B += (int)(rgb.b * qty);
 	}
 };
 

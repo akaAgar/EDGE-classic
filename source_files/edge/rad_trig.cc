@@ -182,7 +182,7 @@ public:
 		}
 		else
 		{	
-			HUD_SetTextColor(T_WHITE);  
+			HUD_SetTextColor(epi::color_c::White());  
 		}
 		
 		HUD_DrawText(160, y, title.c_str());
@@ -204,7 +204,7 @@ public:
 		}
 		else
 		{
-			HUD_SetTextColor(T_LTBLUE);
+			HUD_SetTextColor(epi::color_c::LightBlue());
 		}
 		
 		for (int c = 0; c < NumChoices(); c++, y += HUD_FontHeight())

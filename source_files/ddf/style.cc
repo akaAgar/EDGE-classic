@@ -315,7 +315,7 @@ backgroundstyle_c::~backgroundstyle_c()
 //
 void backgroundstyle_c::Default()
 {
-	colour = RGB_NO_VALUE;
+	colour = epi::color_c::NoValue();
 	translucency = PERCENT_MAKE(100);
 
 	image_name.clear();	

@@ -21,7 +21,7 @@
 
 #include "epi.h"
 #include "arrays.h"
-
+#include "math_color.h"
 #include "types.h"
 
 class fontdef_c;
@@ -40,7 +40,7 @@ public:
 	void Default();
 	backgroundstyle_c& operator= (const backgroundstyle_c& rhs);
 
-	rgbcol_t colour;
+	epi::color_c colour;
 	percent_t translucency;
 
 	std::string image_name;
