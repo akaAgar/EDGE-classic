@@ -757,11 +757,11 @@ public:
 		{
 			local_gl_vert_t *dest = &local_verts[first_vert_index + v_idx];
 
-			dest->rgba[3] = alpha;
+			dest->rgba.a = alpha;
 
 			vec3_t lit_pos;
 
-			(*func)(data, v_idx, &dest->pos, dest->rgba,
+			(*func)(data, v_idx, &dest->pos, &dest->rgba,
 					&dest->texc[0], &dest->normal, &lit_pos);
 
 			TexCoord(dest, 1, &lit_pos);

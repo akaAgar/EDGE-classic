@@ -111,7 +111,7 @@ void RGL_SoftInitUnits()
 {
 	// setup pointers to client state
 	glVertexPointer(3, GL_FLOAT, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, pos.x)));
-	glColorPointer (4, GL_FLOAT, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, rgba)));
+	glColorPointer (4, GL_UNSIGNED_BYTE, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, rgba.r)));
 	glNormalPointer(GL_FLOAT, sizeof(local_gl_vert_t), BUFFER_OFFSET(offsetof(local_gl_vert_t, normal.x)));
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -226,9 +226,9 @@ void RGL_EndUnit(int actual_vert)
 	{
 		local_gl_vert_t *v = &local_verts[cur_vert + i];
 
-		v->rgba[0] *= ren_red_mul;
-		v->rgba[1] *= ren_grn_mul;
-		v->rgba[2] *= ren_blu_mul;
+		v->rgba.r *= ren_red_mul;
+		v->rgba.g *= ren_grn_mul;
+		v->rgba.b *= ren_blu_mul;
 	}
 
 	glBufferSubData(GL_ARRAY_BUFFER, GLintptr(cur_vert * sizeof(local_gl_vert_t)), actual_vert * sizeof(local_gl_vert_t), &local_verts[cur_vert]);
@@ -475,7 +475,7 @@ void RGL_DrawUnits(void)
 		if (active_blending & BL_Less)
 		{
 			// NOTE: assumes alpha is constant over whole unit
-			float a = local_verts[unit->indices[0]].rgba[3];
+			float a = local_verts[unit->indices[0]].rgba.a / 255.0f;
 			glAlphaFunc(GL_GREATER, a * 0.66f); // Should this be GL_LESS now ?
 		}
 

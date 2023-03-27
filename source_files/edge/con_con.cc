@@ -599,11 +599,6 @@ static void CalcSizes()
 
 static void SolidBox(int x, int y, int w, int h, epi::color_c col, float alpha)
 {
-
-	float r = col.r/255.0;
-	float g = col.g/255.0;
-	float b = col.b/255.0;
-
 	int first_vert_index = 0;
 
 	local_gl_unit_t *glunit = RGL_BeginUnit(
@@ -622,10 +617,8 @@ static void SolidBox(int x, int y, int w, int h, epi::color_c col, float alpha)
 	local_verts[first_vert_index+3].pos = {(float)x+w, (float)y, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = alpha;
+		local_verts[first_vert_index+i].rgba = col;
+		local_verts[first_vert_index+i].rgba.a = (int)(alpha * 255.0f);
 	}
 	RGL_EndUnit(4);
 }
@@ -642,11 +635,6 @@ static void DrawChar(int x, int y, char ch, epi::color_c col)
 {
 	if (x + FNSZ < 0)
 		return;
-
-	float alpha = 1.0f;
-	float r = col.r/255.0f;
-	float g =  col.g/255.0f;
-	float b = col.b/255.0f;
 
 	if (con_font->def->type == FNTYP_TrueType)
 	{
@@ -684,10 +672,7 @@ static void DrawChar(int x, int y, char ch, epi::color_c col)
 		local_verts[first_vert_index+3].pos = {x + x_adjust,y - y_adjust - height, 0.0f};
 		for (int i=0; i < 4; i++)
 		{
-			local_verts[first_vert_index+i].rgba[0] = r;
-			local_verts[first_vert_index+i].rgba[1] = g;
-			local_verts[first_vert_index+i].rgba[2] = b;
-			local_verts[first_vert_index+i].rgba[3] = alpha;
+			local_verts[first_vert_index+i].rgba = col;
 		}
 		RGL_EndUnit(4);
 		return;
@@ -726,10 +711,7 @@ static void DrawChar(int x, int y, char ch, epi::color_c col)
 	local_verts[first_vert_index+3].pos = {(float)x+FNSZ, (float)y, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = alpha;
+		local_verts[first_vert_index+i].rgba = col;
 	}
 	RGL_EndUnit(4);
 }
@@ -738,11 +720,6 @@ static void DrawEndoomChar(int x, int y, char ch, epi::color_c col, epi::color_c
 {
 	if (x + FNSZ < 0)
 		return;
-
-	float alpha = 1.0f;
-	float r = col2.r/255.0f;
-	float g = col2.g/255.0f;
-	float b = col2.b/255.0f;
 
 	int first_vert_index = 0;
 
@@ -762,16 +739,9 @@ static void DrawEndoomChar(int x, int y, char ch, epi::color_c col, epi::color_c
 	local_verts[first_vert_index+3].pos = {(float)x+FNSZ-3, (float)y, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = alpha;
+		local_verts[first_vert_index+i].rgba = col;
 	}
 	RGL_EndUnit(4);
-
-	r = col.r/255.0f;
-	g = col.g/255.0f;
-	b =	col.b/255.0f;
 
 	if (blink && con_cursor >= 16)
 		ch = 0x20;
@@ -805,10 +775,7 @@ static void DrawEndoomChar(int x, int y, char ch, epi::color_c col, epi::color_c
 	local_verts[first_vert_index+3].pos = {(float)x+FNSZ, (float)y, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = alpha;
+		local_verts[first_vert_index+i].rgba = col2;
 	}
 	RGL_EndUnit(4);
 }

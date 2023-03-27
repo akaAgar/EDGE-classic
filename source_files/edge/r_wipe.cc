@@ -202,10 +202,8 @@ static void RGL_Wipe_Fading(float how_far)
 	local_verts[first_vert_index+3].pos = {(float)SCREENWIDTH, 0.0f, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = 1.0f;
-		local_verts[first_vert_index+i].rgba[1] = 1.0f;
-		local_verts[first_vert_index+i].rgba[2] = 1.0f;
-		local_verts[first_vert_index+i].rgba[3] = 1.0f - how_far;
+		local_verts[first_vert_index+i].rgba = epi::color_c::White();
+		local_verts[first_vert_index+i].rgba.a = (int)((1.0f - how_far) * 255.0f);
 	}
 	RGL_EndUnit(4);
 }
@@ -237,10 +235,8 @@ static void RGL_Wipe_Pixelfade(float how_far)
 	local_verts[first_vert_index+3].pos = {(float)SCREENWIDTH, 0.0f, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = 1.0f;
-		local_verts[first_vert_index+i].rgba[1] = 1.0f;
-		local_verts[first_vert_index+i].rgba[2] = 1.0f;
-		local_verts[first_vert_index+i].rgba[3] = 1.0f - how_far;
+		local_verts[first_vert_index+i].rgba = epi::color_c::White();
+		local_verts[first_vert_index+i].rgba.a = (int)((1.0f - how_far) * 255.0f);
 	}
 	RGL_EndUnit(4);
 }
@@ -278,17 +274,11 @@ static void RGL_Wipe_Melt(void)
 
 		local_verts[first_vert_index+ind].texc->Set(tx, cur_wipe_top);
 		local_verts[first_vert_index+ind].pos = {sx, sy};
-		local_verts[first_vert_index+ind].rgba[0] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[1] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[2] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+		local_verts[first_vert_index+ind].rgba = epi::color_c::White();
 		ind++;
 		local_verts[first_vert_index+ind].texc->Set(tx, 0.0f);
 		local_verts[first_vert_index+ind].pos = {sx, sy - SCREENHEIGHT};
-		local_verts[first_vert_index+ind].rgba[0] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[1] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[2] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+		local_verts[first_vert_index+ind].rgba = epi::color_c::White();
 		ind++;
 	}
 
@@ -323,10 +313,7 @@ static void RGL_Wipe_Slide(float how_far, float dx, float dy)
 	local_verts[first_vert_index+3].pos = {dx+(float)SCREENWIDTH, dy, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = 1.0f;
-		local_verts[first_vert_index+i].rgba[1] = 1.0f;
-		local_verts[first_vert_index+i].rgba[2] = 1.0f;
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = epi::color_c::White();
 	}
 	RGL_EndUnit(4);
 }
@@ -381,17 +368,11 @@ static void RGL_Wipe_Doors(float how_far)
 
 				local_verts[first_vert_index+ind].texc->Set(t_x2 * cur_wipe_right, t_y);
 				local_verts[first_vert_index+ind].pos = {v_x2, v_y2 + j2 * row};
-				local_verts[first_vert_index+ind].rgba[0] = 1.0f;
-				local_verts[first_vert_index+ind].rgba[1] = 1.0f;
-				local_verts[first_vert_index+ind].rgba[2] = 1.0f;
-				local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+				local_verts[first_vert_index+ind].rgba = epi::color_c::White();
 				ind++;
 				local_verts[first_vert_index+ind].texc->Set(t_x1 * cur_wipe_right, t_y);
 				local_verts[first_vert_index+ind].pos = {v_x1, v_y1 + j1 * row};
-				local_verts[first_vert_index+ind].rgba[0] = 1.0f;
-				local_verts[first_vert_index+ind].rgba[1] = 1.0f;
-				local_verts[first_vert_index+ind].rgba[2] = 1.0f;
-				local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+				local_verts[first_vert_index+ind].rgba = epi::color_c::White();
 				ind++;
 			}
 

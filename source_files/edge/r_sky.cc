@@ -354,12 +354,7 @@ void RGL_DrawSkyBox(void)
 		v1 = 1.0f - v0;
 	}
 
-	float col[4];
-
-	col[0] = LT_RED(255);
-	col[1] = LT_GRN(255);
-	col[2] = LT_BLU(255);
-	col[3] = 1.0f;
+	epi::color_c col = epi::color_c(LT_RED(255), LT_GRN(255), LT_BLU(255));
 
 	int first_vert_index;
 
@@ -386,10 +381,7 @@ void RGL_DrawSkyBox(void)
 	local_verts[first_vert_index+3].pos = {dist, dist, +dist};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = col[0];
-		local_verts[first_vert_index+i].rgba[1] = col[1];
-		local_verts[first_vert_index+i].rgba[2] = col[2];
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = col;
 		local_verts[first_vert_index+i].normal.Set(0, 0, -1);
 	}
 	RGL_EndUnit(4);
@@ -417,10 +409,7 @@ void RGL_DrawSkyBox(void)
 	local_verts[first_vert_index+3].pos = {dist, -dist, -dist};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = col[0];
-		local_verts[first_vert_index+i].rgba[1] = col[1];
-		local_verts[first_vert_index+i].rgba[2] = col[2];
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = col;
 		local_verts[first_vert_index+i].normal.Set(0, 0, +1);
 	}
 	RGL_EndUnit(4);
@@ -448,10 +437,7 @@ void RGL_DrawSkyBox(void)
 	local_verts[first_vert_index+3].pos = {dist, dist, -dist};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = col[0];
-		local_verts[first_vert_index+i].rgba[1] = col[1];
-		local_verts[first_vert_index+i].rgba[2] = col[2];
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = col;
 		local_verts[first_vert_index+i].normal.Set(0, -1, 0);
 	}
 	RGL_EndUnit(4);
@@ -479,10 +465,7 @@ void RGL_DrawSkyBox(void)
 	local_verts[first_vert_index+3].pos = {dist, -dist, -dist};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = col[0];
-		local_verts[first_vert_index+i].rgba[1] = col[1];
-		local_verts[first_vert_index+i].rgba[2] = col[2];
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = col;
 		local_verts[first_vert_index+i].normal.Set(-1, 0, 0);
 	}
 	RGL_EndUnit(4);
@@ -510,10 +493,7 @@ void RGL_DrawSkyBox(void)
 	local_verts[first_vert_index+3].pos = {-dist, -dist, -dist};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = col[0];
-		local_verts[first_vert_index+i].rgba[1] = col[1];
-		local_verts[first_vert_index+i].rgba[2] = col[2];
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = col;
 		local_verts[first_vert_index+i].normal.Set(0, +1, 0);
 	}
 	RGL_EndUnit(4);
@@ -541,10 +521,7 @@ void RGL_DrawSkyBox(void)
 	local_verts[first_vert_index+3].pos = {-dist, dist, -dist};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = col[0];
-		local_verts[first_vert_index+i].rgba[1] = col[1];
-		local_verts[first_vert_index+i].rgba[2] = col[2];
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = col;
 		local_verts[first_vert_index+i].normal.Set(+1, 0, 0);
 	}
 	RGL_EndUnit(4);
@@ -609,17 +586,11 @@ void RGL_DrawSkyOriginal(void)
 
 		local_verts[first_vert_index+ind].texc->Set(tx, 1.0f - ty1);
 		local_verts[first_vert_index+ind].pos = {(float)sx, 0.0f};
-		local_verts[first_vert_index+ind].rgba[0] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[1] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[2] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+		local_verts[first_vert_index+ind].rgba = epi::color_c::White();
 		ind++;
 		local_verts[first_vert_index+ind].texc->Set(tx, 1.0f - ty2);
 		local_verts[first_vert_index+ind].pos = {(float)sx, (float)SCREENHEIGHT};
-		local_verts[first_vert_index+ind].rgba[0] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[1] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[2] = 1.0f;
-		local_verts[first_vert_index+ind].rgba[3] = 1.0f;
+		local_verts[first_vert_index+ind].rgba = epi::color_c::White();
 		ind++;
  	}
 
@@ -685,10 +656,7 @@ void RGL_DrawSkyPlane(subsector_t *sub, float h)
 
 	for (int i=0; i < num_verts; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = 1.0;
-		local_verts[first_vert_index+i].rgba[1] = 1.0;
-		local_verts[first_vert_index+i].rgba[2] = 1.0;
-		local_verts[first_vert_index+i].rgba[3] = 1.0;
+		local_verts[first_vert_index+i].rgba = epi::color_c::White();
 		local_verts[first_vert_index+i].normal.Set(0, 0, (viewz > h) ? 1.0f : -1.0f);
 		local_verts[first_vert_index+i].pos.Set(plane_verts[i].x, plane_verts[i].y, plane_verts[i].z);
 		glunit->indices[i] = first_vert_index+i;
@@ -732,10 +700,7 @@ void RGL_DrawSkyWall(seg_t *seg, float h1, float h2)
 	local_verts[first_vert_index+5].pos = {x1, y1, h1};
 	for (int i=0; i < 6; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = 1.0;
-		local_verts[first_vert_index+i].rgba[1] = 1.0;
-		local_verts[first_vert_index+i].rgba[2] = 1.0;
-		local_verts[first_vert_index+i].rgba[3] = 1.0;
+		local_verts[first_vert_index+i].rgba = epi::color_c::White();
 		local_verts[first_vert_index+i].normal.Set(y2-y1, x1-x2, 0);
 		glunit->indices[i] = first_vert_index+i;
 	}

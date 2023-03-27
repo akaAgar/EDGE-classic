@@ -29,10 +29,12 @@
 #define MAX_PLVERT  64
 #define MAX_L_VERT  64000
 
+#include "math_color.h"
+
 // a single vertex to pass to the GL 
 typedef struct local_gl_vert_s
 {
-	GLfloat rgba[4];
+	epi::color_c rgba;
 	vec3_t pos;
 	vec2_t texc[2];
 	vec3_t normal;

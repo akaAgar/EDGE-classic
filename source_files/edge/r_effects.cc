@@ -205,10 +205,10 @@ void RGL_ColourmapEffect(player_t *player)
 		local_verts[first_vert_index+3].pos = {x1, y2, 0.0f};
 		for (int i=0; i < 4; i++)
 		{
-			local_verts[first_vert_index+i].rgba[0] = r;
-			local_verts[first_vert_index+i].rgba[1] = g;
-			local_verts[first_vert_index+i].rgba[2] = b;
-			local_verts[first_vert_index+i].rgba[3] = 0.0f;
+			local_verts[first_vert_index+i].rgba.r = (int)(r * 255.0f);
+			local_verts[first_vert_index+i].rgba.g = (int)(g * 255.0f);
+			local_verts[first_vert_index+i].rgba.b = (int)(b * 255.0f);
+			local_verts[first_vert_index+i].rgba.a = 0;
 		}
 		RGL_EndUnit(4);
 
@@ -278,10 +278,10 @@ void RGL_PaletteEffect(player_t *player)
 	local_verts[first_vert_index+3].pos = {0.0f, 0.0f, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = s;
+		local_verts[first_vert_index+i].rgba.r = (int)(r * 255.0f);
+		local_verts[first_vert_index+i].rgba.g = (int)(g * 255.0f);
+		local_verts[first_vert_index+i].rgba.b = (int)(b * 255.0f);
+		local_verts[first_vert_index+i].rgba.a = (int)(s * 255.0f);
 	}
 	RGL_EndUnit(4);
 

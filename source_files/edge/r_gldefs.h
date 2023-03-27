@@ -59,9 +59,9 @@ void RGL_SetupMatrices2D(void);
 void RGL_SetupMatricesWorld2D(void);
 void RGL_SetupMatrices3D(void);
 
-#define LT_RED(light)  (MIN(255,light) * ren_red_mul / 255.0f)
-#define LT_GRN(light)  (MIN(255,light) * ren_grn_mul / 255.0f)
-#define LT_BLU(light)  (MIN(255,light) * ren_blu_mul / 255.0f)
+#define LT_RED(light)  (int)(MIN(255,light) * ren_red_mul)
+#define LT_GRN(light)  (int)(MIN(255,light) * ren_grn_mul)
+#define LT_BLU(light)  (int)(MIN(255,light) * ren_blu_mul)
 
 
 //

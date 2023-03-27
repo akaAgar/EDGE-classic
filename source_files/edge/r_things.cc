@@ -371,13 +371,13 @@ static void RGL_DrawPSprite(pspdef_t * psp, int which,
 
 				FUZZ_Adjust(& dest->texc[1], player->mo);
 
-				dest->rgba[0] = dest->rgba[1] = dest->rgba[2] = 0;
+				dest->rgba = epi::color_c::Black();
 			}
 			else if (! is_additive)
 			{
-				dest->rgba[0] = data.col[v_idx].mod_R / 255.0;
-				dest->rgba[1] = data.col[v_idx].mod_G / 255.0;
-				dest->rgba[2] = data.col[v_idx].mod_B / 255.0;
+				dest->rgba.r = data.col[v_idx].mod_R;
+				dest->rgba.g = data.col[v_idx].mod_G;
+				dest->rgba.b = data.col[v_idx].mod_B;
 
 				data.col[v_idx].mod_R -= 256;
 				data.col[v_idx].mod_G -= 256;
@@ -385,12 +385,12 @@ static void RGL_DrawPSprite(pspdef_t * psp, int which,
 			}
 			else
 			{
-				dest->rgba[0] = data.col[v_idx].add_R / 255.0;
-				dest->rgba[1] = data.col[v_idx].add_G / 255.0;
-				dest->rgba[2] = data.col[v_idx].add_B / 255.0;
+				dest->rgba.r = data.col[v_idx].add_R;
+				dest->rgba.g = data.col[v_idx].add_G;
+				dest->rgba.b = data.col[v_idx].add_B;
 			}
 
-			dest->rgba[3] = trans;
+			dest->rgba.a = (int)(trans * 255.0f);
 		}
 
 		RGL_EndUnit(4);
@@ -443,9 +443,9 @@ static void DrawStdCrossHair(void)
 
 	intensity *= r_crossbright.f;
 
-	float r = color.r * intensity / 255.0f;
-	float g = color.g * intensity / 255.0f;
-	float b = color.b * intensity / 255.0f;
+	color.r *= intensity;
+	color.g *= intensity;
+	color.b *= intensity;
 
 	float x = viewwindow_x + viewwindow_w / 2;
 	float y = viewwindow_y + viewwindow_h / 2;
@@ -478,10 +478,7 @@ static void DrawStdCrossHair(void)
 	local_verts[first_vert_index+3].pos = {x+w, y-w, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = color;
 	}
 	RGL_EndUnit(4);
 
@@ -1465,13 +1462,13 @@ void RGL_DrawThing(drawfloor_t *dfloor, drawthing_t *dthing)
 				dest->texc[1].x = ftx * fuzz_mul + fuzz_add.x;
 				dest->texc[1].y = fty * fuzz_mul + fuzz_add.y;;
 
-				dest->rgba[0] = dest->rgba[1] = dest->rgba[2] = 0;
+				dest->rgba = epi::color_c::Black();
 			}
 			else if (! is_additive)
 			{
-				dest->rgba[0] = data.col[v_idx].mod_R / 255.0;
-				dest->rgba[1] = data.col[v_idx].mod_G / 255.0;
-				dest->rgba[2] = data.col[v_idx].mod_B / 255.0;
+				dest->rgba.r = data.col[v_idx].mod_R;
+				dest->rgba.g = data.col[v_idx].mod_G;
+				dest->rgba.b = data.col[v_idx].mod_B;
 
 				data.col[v_idx].mod_R -= 256;
 				data.col[v_idx].mod_G -= 256;
@@ -1479,12 +1476,12 @@ void RGL_DrawThing(drawfloor_t *dfloor, drawthing_t *dthing)
 			}
 			else
 			{
-				dest->rgba[0] = data.col[v_idx].add_R / 255.0;
-				dest->rgba[1] = data.col[v_idx].add_G / 255.0;
-				dest->rgba[2] = data.col[v_idx].add_B / 255.0;
+				dest->rgba.r = data.col[v_idx].add_R;
+				dest->rgba.g = data.col[v_idx].add_G;
+				dest->rgba.b = data.col[v_idx].add_B;
 			}
 
-			dest->rgba[3] = trans;
+			dest->rgba.a = (int)(trans * 255.0f);
 		}
 
 		RGL_EndUnit(4);

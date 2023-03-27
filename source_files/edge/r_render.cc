@@ -682,7 +682,7 @@ typedef struct
 	int pass;
 	int blending;
 	
-	float R, G, B;
+	epi::color_c RGB;
 	float trans;
 
 	divline_t div;
@@ -698,7 +698,7 @@ wall_coord_data_t;
 
 
 static void WallCoordFunc(void *d, int v_idx,
-		vec3_t *pos, float *rgb, vec2_t *texc,
+		vec3_t *pos, epi::color_c *rgb, vec2_t *texc,
 		vec3_t *normal, vec3_t *lit_pos)
 {
 	const wall_coord_data_t *data = (wall_coord_data_t *)d;
@@ -708,15 +708,13 @@ static void WallCoordFunc(void *d, int v_idx,
 
 	if (swirl_pass > 1)
 	{
-		rgb[0] = 1.0 / data->R;
-		rgb[1] = 1.0 / data->G;
-		rgb[2] = 1.0 / data->B;
+		rgb->r = (int)(255.0f / data->RGB.r);
+		rgb->g = (int)(255.0f / data->RGB.g);
+		rgb->b = (int)(255.0f / data->RGB.b);
 	}
 	else
 	{
-		rgb[0] = data->R;
-		rgb[1] = data->G;
-		rgb[2] = data->B;		
+		*rgb = data->RGB;		
 	}
 
 	float along;
@@ -750,7 +748,7 @@ typedef struct
 	int pass;
 	int blending;
 
-	float R, G, B;
+	epi::color_c RGB;
 	float trans;
 
 	float tx0, ty0;
@@ -766,7 +764,7 @@ typedef struct
 plane_coord_data_t;
 
 static void PlaneCoordFunc(void *d, int v_idx,
-		vec3_t *pos, float *rgb, vec2_t *texc,
+		vec3_t *pos, epi::color_c *rgb, vec2_t *texc,
 		vec3_t *normal, vec3_t *lit_pos)
 {
 	const plane_coord_data_t *data = (plane_coord_data_t *)d;
@@ -776,15 +774,13 @@ static void PlaneCoordFunc(void *d, int v_idx,
 
 	if (swirl_pass > 1)
 	{
-		rgb[0] = 1.0 / data->R;
-		rgb[1] = 1.0 / data->G;
-		rgb[2] = 1.0 / data->B;
+		rgb->r = (int)(255.0f / data->RGB.r);
+		rgb->g = (int)(255.0f / data->RGB.g);
+		rgb->b = (int)(255.0f / data->RGB.b);
 	}
 	else
 	{
-		rgb[0] = data->R;
-		rgb[1] = data->G;
-		rgb[2] = data->B;		
+		*rgb = data->RGB;		
 	}
 
 	float rx = (data->tx0 + pos->x) / data->image_w;
@@ -1109,7 +1105,7 @@ static void DrawWallPart(drawfloor_t *dfloor,
 	data.v_count = v_count;
 	data.vert = vertices;
 
-	data.R = data.G = data.B = 1.0f;
+	data.RGB = epi::color_c::White();
 
 	data.div.x  = x1;
 	data.div.y  = y1;
@@ -1712,7 +1708,7 @@ typedef struct
 	GLuint tex_id;
 	int pass;
 		
-	float R, G, B;
+	epi::color_c RGB;
 
 	float plane_h;
 
@@ -1733,7 +1729,7 @@ flood_emu_data_t;
 
 
 static void FloodCoordFunc(void *d, int v_idx,
-		vec3_t *pos, float *rgb, vec2_t *texc,
+		vec3_t *pos, epi::color_c *rgb, vec2_t *texc,
 		vec3_t *normal, vec3_t *lit_pos)
 {
 	const flood_emu_data_t *data = (flood_emu_data_t *)d;
@@ -1741,9 +1737,7 @@ static void FloodCoordFunc(void *d, int v_idx,
 	*pos    = data->vert[v_idx];
 	*normal = data->normal;
 
-	rgb[0] = data->R;
-	rgb[1] = data->G;
-	rgb[2] = data->B;
+	*rgb = data->RGB;
 
 	float along = (viewz - data->plane_h) / (viewz - pos->z);
 
@@ -1837,7 +1831,7 @@ static void EmulateFloodPlane(const drawfloor_t *dfloor,
 	data.tex_id = W_ImageCache(surf->image, true, ren_fx_colmap);
 	data.pass = 0;
 
-	data.R = data.G = data.B = 1.0f;
+	data.RGB = epi::color_c::White();
 
 	data.plane_h = (face_dir > 0) ? h2 : h1;
 
@@ -2537,7 +2531,7 @@ static void RGL_DrawPlane(drawfloor_t *dfloor, float h,
 
 	data.v_count = v_count;
 	data.vert = vertices;
-	data.R = data.G = data.B = 1.0f;
+	data.RGB = epi::color_c::White();
 	data.tx0 = surf->offset.x;
 	data.ty0 = surf->offset.y;
 	data.image_w = IM_WIDTH(surf->image);
@@ -2862,27 +2856,23 @@ static void RGL_DrawSubList(std::list<drawsub_c *> &dsubs, bool for_mirror = fal
 static void DrawMirrorPolygon(drawmirror_c *mir)
 {
 	float alpha = 0.15 + 0.10 * num_active_mirrors;
-	float R,G,B = 0;
+	epi::color_c RGB = epi::color_c::Black();
 
 	line_t *ld = mir->seg->linedef;
 	SYS_ASSERT(ld);
 
 	if (ld->special)
 	{
-		R = ld->special->fx_color.r / 255.0;
-		G = ld->special->fx_color.g / 255.0;
-		B = ld->special->fx_color.b / 255.0;
+		RGB = ld->special->fx_color;
 
 		// looks better with reduced color in multiple reflections
 		float reduce = 1.0f / (1 + 1.5 * num_active_mirrors);
 
-		R *= reduce; G *= reduce; B *= reduce;
+		RGB.r *= reduce; RGB.g *= reduce; RGB.b *= reduce;
 	}
 	else
 	{
-		R = 1.0;
-		G = 0.0;
-		B = 0.0;
+		RGB = epi::color_c::Red();
 	}
 
 	float x1 = mir->seg->v1->x;
@@ -2917,10 +2907,8 @@ static void DrawMirrorPolygon(drawmirror_c *mir)
 
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = R;
-		local_verts[first_vert_index+i].rgba[1] = G;
-		local_verts[first_vert_index+i].rgba[2] = B;
-		local_verts[first_vert_index+i].rgba[3] = alpha;
+		local_verts[first_vert_index+i].rgba = RGB;
+		local_verts[first_vert_index+i].rgba.a = (int)(alpha * 255.0f);
 	}
 
 	RGL_EndUnit(4);
@@ -2944,11 +2932,8 @@ static void DrawPortalPolygon(drawmirror_c *mir)
 	GLuint tex_id = W_ImageCache(surf->image);
 
 	// set colour & alpha
-	float alpha = ld->special->translucency * surf->translucency;
-
-	float R = ld->special->fx_color.r / 255.0;
-	float G = ld->special->fx_color.g / 255.0;
-	float B = ld->special->fx_color.b / 255.0;
+	epi::color_c RGB = ld->special->fx_color;
+	RGB.a = (int)(ld->special->translucency * surf->translucency * 255.0f);
 
 	// get polygon coordinates
 	float x1 = mir->seg->v1->x;
@@ -2999,10 +2984,7 @@ static void DrawPortalPolygon(drawmirror_c *mir)
 
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = R;
-		local_verts[first_vert_index+i].rgba[1] = G;
-		local_verts[first_vert_index+i].rgba[2] = B;
-		local_verts[first_vert_index+i].rgba[3] = alpha;
+		local_verts[first_vert_index+i].rgba = RGB;
 	}
 
 	RGL_EndUnit(4);

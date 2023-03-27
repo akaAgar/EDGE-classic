@@ -441,7 +441,7 @@ static void UpdateMulticols(model_coord_data_t *data)
 
 static inline void ModelCoordFunc(model_coord_data_t *data,
 					 int v_idx, vec3_t *pos,
-					 float *rgb, vec2_t *texc, vec3_t *normal)
+					 epi::color_c *rgb, vec2_t *texc, vec3_t *normal)
 {
 	const vxl_model_c *md = data->model;
 
@@ -734,7 +734,7 @@ void VXL_RenderModel(vxl_model_c *md, bool is_weapon,
 				ModelCoordFunc(&data, v_idx, &dest->pos, dest->rgba,
 						&dest->texc[0], &dest->normal);
 
-				dest->rgba[3] = trans;
+				dest->rgba.a = (int)(trans * 255.0f);
 			}
 		}
 
@@ -772,10 +772,10 @@ void VXL_RenderModel(vxl_model_c *md, bool is_weapon,
 			{
 				local_gl_vert_t *dest = &local_verts[first_vert_index + (i*3) + v_idx];
 
-				ModelCoordFunc(&data, v_idx, &dest->pos, dest->rgba,
+				ModelCoordFunc(&data, v_idx, &dest->pos, &dest->rgba,
 						&dest->texc[0], &dest->normal);
 
-				dest->rgba[3] = trans;
+				dest->rgba.a = (int)(trans * 255.0f);
 
 				glunit->indices[(i*3) + v_idx] = first_vert_index + (i*3) + v_idx;
 			}
@@ -820,22 +820,12 @@ void VXL_RenderModel_2D(vxl_model_c *md, float x, float y,
 	xscale = yscale * info->model_scale * info->model_aspect;
 	yscale = yscale * info->model_scale;
 
-	float r,g,b,a;
+	epi::color_c col = (info->flags & MF_FUZZY) ? epi::color_c::Black() : epi::color_c::White();
 
 	if (info->flags & MF_FUZZY)
-	{
-		r = 0.0f;
-		g = 0.0f;
-		b = 0.0f;
-		a = 0.5f;
-	}
+		col.a = (int)(0.5f * 255.0f);
 	else
-	{
-		r = 1.0f;
-		g = 1.0f;
-		b = 1.0f;
-		a = 1.0f;
-	}
+		col.a = (int)(1.0f * 255.0f);
 
 	RGL_StartUnits(false);
 
@@ -874,10 +864,7 @@ void VXL_RenderModel_2D(vxl_model_c *md, float x, float y,
 
 			local_verts[first_vert_index + (i*3) + v_idx].pos = {x + dy, y + dz, dx / 256.0f};
 
-			local_verts[first_vert_index + (i*3) + v_idx].rgba[0] = r;
-			local_verts[first_vert_index + (i*3) + v_idx].rgba[1] = g;
-			local_verts[first_vert_index + (i*3) + v_idx].rgba[2] = b;
-			local_verts[first_vert_index + (i*3) + v_idx].rgba[3] = a;
+			local_verts[first_vert_index + (i*3) + v_idx].rgba = col;
 
 			glunit->indices[(i*3) + v_idx] = first_vert_index + (i*3) + v_idx;
 		}

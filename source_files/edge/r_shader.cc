@@ -347,10 +347,9 @@ public:
 
 			float L = mo->state->bright / 255.0;
 
-			float R = L * col.r / 255.0;
-			float G = L * col.g / 255.0;
-			float B = L * col.b / 255.0;
-
+			col.r *= L;
+			col.g *= L;
+			col.b *= L;
 
 			int first_vert_index = 0;
 
@@ -390,7 +389,7 @@ public:
 
 				vec3_t lit_pos;
 
-				(*func)(data, v_idx, &dest->pos, dest->rgba,
+				(*func)(data, v_idx, &dest->pos, &dest->rgba,
 						&dest->texc[0], &dest->normal, &lit_pos);
 
 				float dist = TexCoord(&dest->texc[1], WhatRadius(DL),
@@ -398,10 +397,10 @@ public:
 
 				float ity = exp(-5.44 * dist * dist);
 
-				dest->rgba[0] = R * ity;
-				dest->rgba[1] = G * ity;
-				dest->rgba[2] = B * ity;
-				dest->rgba[3] = alpha;
+				dest->rgba.r = col.r * ity;
+				dest->rgba.g = col.g * ity;
+				dest->rgba.b = col.b * ity;
+				dest->rgba.a = (int)(alpha * 255.0f);
 			}
 
 			RGL_EndUnit(num_vert);
@@ -571,9 +570,9 @@ public:
 
 			float L = mo->state->bright / 255.0;
 
-			float R = L * col.r / 255.0;
-			float G = L * col.g / 255.0;
-			float B = L * col.b / 255.0;
+			col.r *= L;
+			col.g *= L;
+			col.b *= L;
 
 			int first_vert_index = 0;
 
@@ -613,16 +612,14 @@ public:
 
 				vec3_t lit_pos;
 
-				(*func)(data, v_idx, &dest->pos, dest->rgba,
+				(*func)(data, v_idx, &dest->pos, &dest->rgba,
 						&dest->texc[0], &dest->normal, &lit_pos);
 
 				TexCoord(&dest->texc[1], WhatRadius(DL), sec,
 						 &lit_pos, &dest->normal);
 
-				dest->rgba[0] = R;
-				dest->rgba[1] = G;
-				dest->rgba[2] = B;
-				dest->rgba[3] = alpha;
+				dest->rgba = col;
+				dest->rgba.a = (int)(alpha * 255.0f);
 			}
 
 			RGL_EndUnit(num_vert);

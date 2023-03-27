@@ -79,7 +79,7 @@ public:
 
 
 typedef void (* shader_coord_func_t)(void *data, int v_idx,
-	vec3_t *pos, float *rgb, vec2_t *texc,
+	vec3_t *pos, epi::color_c *rgb, vec2_t *texc,
 	vec3_t *normal, vec3_t *lit_pos);
 
 

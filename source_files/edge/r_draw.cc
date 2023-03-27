@@ -54,7 +54,7 @@ void RGL_DrawImage(float x, float y, float w, float h, const image_c *image,
 	if (x1 == x2 || y1 == y2)
 		return;
 
-	float r = 1.0f, g = 1.0f, b = 1.0f;
+	epi::color_c col = epi::color_c::White();
 
 	GLuint tex_id = W_ImageCache(image, true,
 		(textmap && (textmap->special & COLSP_Whiten)) ? NULL : palremap, (textmap && (textmap->special & COLSP_Whiten)) ? true : false);
@@ -75,13 +75,7 @@ void RGL_DrawImage(float x, float y, float w, float h, const image_c *image,
 		blending |= BL_Less; // Redundant? - Dasho
 
 	if (textmap)
-	{
-		epi::color_c col = V_GetFontColor(textmap);
-
-		r = col.r / 255.0;
-		g = col.g / 255.0;
-		b = col.b / 255.0;
-	}
+		col = V_GetFontColor(textmap);
 
 	int first_vert_index = 0;
 
@@ -109,10 +103,7 @@ void RGL_DrawImage(float x, float y, float w, float h, const image_c *image,
 	local_verts[first_vert_index+3].pos = {(float)x1, (float)y2, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = 1.0f;
+		local_verts[first_vert_index+i].rgba = col;
 	}
 	RGL_EndUnit(4);
 

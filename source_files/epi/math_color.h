@@ -56,12 +56,12 @@ public:
 	inline bool operator== (const color_c& rhs) const { return (r == rhs.r) && (g == rhs.g) && (b == rhs.b) && (a == rhs.a); }
 	inline bool operator!= (const color_c& rhs) const { return (r != rhs.r) || (g != rhs.g) || (b != rhs.b) || (a != rhs.a); }
 
-	inline color_c& ClampSet(int r, int g, int b, int a = 255) 
+	inline color_c& ClampSet(int _r, int _g, int _b, int _a = 255) 
 	{
-		r = byte(MAX(0, MIN(255, r)));
-		g = byte(MAX(0, MIN(255, g)));
-		b = byte(MAX(0, MIN(255, b)));
-		a = byte(MAX(0, MIN(255, a)));
+		r = byte(MAX(0, MIN(255, _r)));
+		g = byte(MAX(0, MIN(255, _g)));
+		b = byte(MAX(0, MIN(255, _b)));
+		a = byte(MAX(0, MIN(255, _a)));
 		return *this;
 	}
 	// set the color value, clamping the given components.

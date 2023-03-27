@@ -405,15 +405,13 @@ void HUD_RawImage(float hx1, float hy1, float hx2, float hy2,
 		y2 < 0 || y1 > SCREENHEIGHT)
 		return;
 
-	float r = 1.0f, g = 1.0f, b = 1.0f;
+	epi::color_c col = epi::color_c::White();
 
 	bool do_whiten = false;
 
 	if (text_col != epi::color_c::NoValue())
 	{
-		r = text_col.r / 255.0;
-		g = text_col.g / 255.0;
-		b = text_col.b / 255.0;
+		col = text_col;
 		do_whiten = true;
 	}
 
@@ -447,10 +445,8 @@ void HUD_RawImage(float hx1, float hy1, float hx2, float hy2,
 		local_verts[first_vert_index+3].pos = {hx1, hy2, 0.0f};
 		for (int i=0; i < 4; i++)
 		{
-			local_verts[first_vert_index+i].rgba[0] = r;
-			local_verts[first_vert_index+i].rgba[1] = g;
-			local_verts[first_vert_index+i].rgba[2] = b;
-			local_verts[first_vert_index+i].rgba[3] = alpha;
+			local_verts[first_vert_index+i].rgba = col;
+			local_verts[first_vert_index+i].rgba.a = (int)(alpha * 255.0f);
 		}
 		RGL_EndUnit(4);
 		RGL_FinishUnits();
@@ -524,10 +520,8 @@ void HUD_RawImage(float hx1, float hy1, float hx2, float hy2,
 	local_verts[first_vert_index+3].pos = {(float)x1, (float)y2, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = alpha;
+		local_verts[first_vert_index+i].rgba = col;
+		local_verts[first_vert_index+i].rgba.a = (int)(alpha * 255.0f);
 	}
 	RGL_EndUnit(4);
 
@@ -564,10 +558,8 @@ void HUD_RawImage(float hx1, float hy1, float hx2, float hy2,
 		local_verts[first_vert_index+3].pos = {(float)x1, (float)y2, 0.0f};
 		for (int i=0; i < 4; i++)
 		{
-			local_verts[first_vert_index+i].rgba[0] = r;
-			local_verts[first_vert_index+i].rgba[1] = g;
-			local_verts[first_vert_index+i].rgba[2] = b;
-			local_verts[first_vert_index+i].rgba[3] = alpha;
+			local_verts[first_vert_index+i].rgba = col;
+			local_verts[first_vert_index+i].rgba.a = (int)(alpha * 255.0f);
 		}
 		RGL_EndUnit(4);
 	}
@@ -728,10 +720,6 @@ void HUD_SolidBox(float x1, float y1, float x2, float y2, epi::color_c col)
 		x2 = COORD_X(x2); y2 = COORD_Y(y2);
 	}
 
- 	float R = col.r/255.0;
-	float G = col.g/255.0;
-	float B = col.b/255.0;
-
 	int first_vert_index = 0;
 
 	RGL_StartUnits(false);
@@ -757,10 +745,8 @@ void HUD_SolidBox(float x1, float y1, float x2, float y2, epi::color_c col)
 	local_verts[first_vert_index+3].pos = {x2, y1, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = R;
-		local_verts[first_vert_index+i].rgba[1] = G;
-		local_verts[first_vert_index+i].rgba[2] = B;
-		local_verts[first_vert_index+i].rgba[3] = cur_alpha;
+		local_verts[first_vert_index+i].rgba = col;
+		local_verts[first_vert_index+i].rgba.a = (int)(cur_alpha * 255.0f);
 	}
 	RGL_EndUnit(4);
 
@@ -785,10 +771,6 @@ void HUD_SolidLine(float x1, float y1, float x2, float y2, epi::color_c col,
 	if (smooth)
 		blending |= BL_SmoothLines;
 
-	float r = col.r/255.0;
-	float g = col.g/255.0;
-	float b = col.b/255.0;
-
 	RGL_StartUnits(false);
 
 	int first_vert_index = 0;
@@ -806,10 +788,8 @@ void HUD_SolidLine(float x1, float y1, float x2, float y2, epi::color_c col,
 
 	for (int i=0; i < 2; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = cur_alpha;
+		local_verts[first_vert_index+i].rgba = col;
+		local_verts[first_vert_index+i].rgba.a = (int)(cur_alpha * 255.0f);
 	}
 	
 	RGL_EndUnit(2);
@@ -826,10 +806,6 @@ void HUD_ThinBox(float x1, float y1, float x2, float y2, epi::color_c col)
 	x2 = COORD_X(x2); y2 = COORD_Y(y2);
 
 	RGL_StartUnits(false);
-
-	float r = col.r/255.0;
-	float g = col.g/255.0;
-	float b = col.b/255.0;
 
 	int first_vert_index = 0;
 
@@ -880,10 +856,8 @@ void HUD_ThinBox(float x1, float y1, float x2, float y2, epi::color_c col)
 	local_verts[first_vert_index+15].pos = {x2-2, y2-2, 0.0f};
 	for (int i=0; i < 16; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = cur_alpha;
+		local_verts[first_vert_index+i].rgba = col;
+		local_verts[first_vert_index+i].rgba.a = (int)(cur_alpha * 255.0f);
 	}
 
 	RGL_EndUnit(16);
@@ -919,22 +893,14 @@ void HUD_GradientBox(float x1, float y1, float x2, float y2, epi::color_c *cols)
 	local_verts[first_vert_index+1].pos = {x1, y2, 0.0f};
 	local_verts[first_vert_index+2].pos = {x2, y2, 0.0f};
 	local_verts[first_vert_index+3].pos = {x2, y1, 0.0f};
-	local_verts[first_vert_index].rgba[0] = cols[1].r/255.0;
-	local_verts[first_vert_index].rgba[1] = cols[1].g/255.0;
-	local_verts[first_vert_index].rgba[2] = cols[1].b/255.0;
-	local_verts[first_vert_index].rgba[3] = cur_alpha;
-	local_verts[first_vert_index+1].rgba[0] = cols[0].r/255.0;
-	local_verts[first_vert_index+1].rgba[1] = cols[0].g/255.0;
-	local_verts[first_vert_index+1].rgba[2] = cols[0].b/255.0;
-	local_verts[first_vert_index+1].rgba[3] = cur_alpha;
-	local_verts[first_vert_index+2].rgba[0] = cols[2].r/255.0;
-	local_verts[first_vert_index+2].rgba[1] = cols[2].g/255.0;
-	local_verts[first_vert_index+2].rgba[2] = cols[2].b/255.0;
-	local_verts[first_vert_index+2].rgba[3] = cur_alpha;
-	local_verts[first_vert_index+3].rgba[0] = cols[3].r/255.0;
-	local_verts[first_vert_index+3].rgba[1] = cols[3].g/255.0;
-	local_verts[first_vert_index+3].rgba[2] = cols[3].b/255.0;
-	local_verts[first_vert_index+3].rgba[3] = cur_alpha;
+	local_verts[first_vert_index].rgba = cols[1];
+	local_verts[first_vert_index].rgba.a = (int)(cur_alpha * 255.0f);
+	local_verts[first_vert_index+1].rgba = cols[0];
+	local_verts[first_vert_index+1].rgba.a = (int)(cur_alpha * 255.0f);
+	local_verts[first_vert_index+2].rgba = cols[2];
+	local_verts[first_vert_index+2].rgba.a = (int)(cur_alpha * 255.0f);
+	local_verts[first_vert_index+3].rgba = cols[3];
+	local_verts[first_vert_index+3].rgba.a = (int)(cur_alpha * 255.0f);
 	RGL_EndUnit(4);
 
 	RGL_FinishUnits();
@@ -1045,12 +1011,6 @@ void HUD_DrawEndoomChar(float left_x, float top_y, float FNX, const image_c *img
 
 	cur_alpha = 1.0f;
 
-	float r = 1.0f, g = 1.0f, b = 1.0f;
-
-	r = color2.r / 255.0;
-	g = color2.g / 255.0;
-	b = color2.b / 255.0;
-
 	RGL_StartUnits(false);
 
 	int first_vert_index = 0;
@@ -1073,18 +1033,12 @@ void HUD_DrawEndoomChar(float left_x, float top_y, float FNX, const image_c *img
 	local_verts[first_vert_index+3].pos = {left_x + w, top_y, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = cur_alpha;
+		local_verts[first_vert_index+i].rgba = color2;
+		local_verts[first_vert_index+i].rgba.a = (int)(cur_alpha * 255.0f);
 	}
 	RGL_EndUnit(4);
 
 	RGL_FinishUnits();
-
-	r = color1.r / 255.0;
-	g = color1.g / 255.0;
-	b = color1.b / 255.0;
 
 	GLuint tex_id = W_ImageCache(img, true, (const colourmap_c *)0, true);
 
@@ -1126,10 +1080,8 @@ void HUD_DrawEndoomChar(float left_x, float top_y, float FNX, const image_c *img
 	local_verts[first_vert_index+3].pos = {left_x - width_adjust, top_y + h, 0.0f};
 	for (int i=0; i < 4; i++)
 	{
-		local_verts[first_vert_index+i].rgba[0] = r;
-		local_verts[first_vert_index+i].rgba[1] = g;
-		local_verts[first_vert_index+i].rgba[2] = b;
-		local_verts[first_vert_index+i].rgba[3] = cur_alpha;
+		local_verts[first_vert_index+i].rgba = color1;
+		local_verts[first_vert_index+i].rgba.a = (int)(cur_alpha * 255.0f);
 	}
 	RGL_EndUnit(4);
 
